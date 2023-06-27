@@ -37,10 +37,11 @@ Open Scope nat_scope.
 (* Require Import Hacspec_Lib_Comparable. *)
 
 Import choice.Choice.Exports.
+Obligation Tactic := (* try timeout 8 *) solve_ssprove_obligations.
 
 (** Should be moved to Hacspec_Lib.v **)
-Program Definition int_xI {WS : wsize} (a : (* both0  *)(@int WS)) : (* both0 *) (@int WS) :=
-  Hacspec_Lib_Pre.int_add (Hacspec_Lib_Pre.int_mul a ((* lift_to_both0 *) (@repr WS 2))) ((* lift_to_both0 *) (@one WS)).
+Program Definition int_xI {WS : wsize} (a : (* both (fset []) ([interface])  *)(@int WS)) : (* both (fset []) ([interface]) *) (@int WS) :=
+  Hacspec_Lib_Pre.int_add (Hacspec_Lib_Pre.int_mul a ((* lift_to_both (fset []) ([interface]) *) (@repr WS 2))) ((* lift_to_both (fset []) ([interface]) *) (@one WS)).
 (* Next Obligation. intros ; now do 2 rewrite fsetU0. Defined. *)
 (* Next Obligation. intros ; rewrite <- fset0E ; now do 2 rewrite fsetU0. Defined. *)
 
@@ -49,7 +50,7 @@ Program Definition int_xO {WS : wsize} (a : int WS) : int WS :=
 (* Next Obligation. intros ; now rewrite fsetU0. Defined. *)
 (* Next Obligation. intros ; rewrite <- fset0E ; now rewrite fsetU0. Defined. *)
 
-Definition both_int_one {WS : wsize} : both0 (@int WS) := lift_to_both (one).
+Definition both_int_one {WS : wsize} : both (fset []) ([interface]) (@int WS) := ret_both (L := fset []) (one).
 
 Compute (Hacspec_Lib_Pre.int_add (repr U32 3%Z) (repr U32 8%Z)).
 
@@ -74,26 +75,30 @@ Check 8 : int8.
 (* Notation U128_t := int128. *)
 (* Notation U128 := id. *)
 
-Class Addition L1 L2 I1 I2 (A : choice_type) := add : both L1 I1 A -> both L2 I2 A -> both L2 I2 A.
+Class Addition L1 L2 (* L3 *) I1 I2 (* I3 *) (A : choice_type) (* `(H_loc_fsubset13 : is_true (fsubset L1 L3)) `(H_opsig_fsubset13 : is_true (fsubset I1 I3)) `(H_loc_fsubset23 : is_true (fsubset L2 L3)) `(H_opsig_fsubset23 : is_true (fsubset I2 I3)) *) :=
+  add : both L1 I1 A -> both L2 I2 A -> both (L1 :|: L2) (* L3 *) (I1 :|: I2) (* I3 *) A.
 Notation "a .+ b" := (add a b).
 (* Instance array_add_inst {ws : wsize} {len: uint_size} {L1 L2 I1 I2} : Addition L1 L2 I1 I2 (nseq (int ws) len) := { add a b := a array_add b }. *)
-(* Instance int_add_inst {ws : wsize} {L1 L2 I1 I2} : Addition L1 L2 I1 I2 (@int ws) := { add a b := int_add a b }. *)
+Instance int_add_inst {ws : wsize} {L1 L2 (* L3 *) I1 I2 (* I3 *)}  (* `{H_loc_fsubset13 : is_true (fsubset L1 L3)} `{H_opsig_fsubset13 : is_true (fsubset I1 I3)} `{H_loc_fsubset23 : is_true (fsubset L2 L3)} `{H_opsig_fsubset23 : is_true (fsubset I2 I3)} *) : Addition L1 L2 (* L3 *) I1 I2 (* I3 *) (@int ws) (* H_loc_fsubset13 H_opsig_fsubset13 H_loc_fsubset23 H_opsig_fsubset23 *) := { add a b := int_add (* (H_loc_incl_x := H_loc_fsubset13) (H_opsig_incl_x := H_opsig_fsubset13) (H_loc_incl_y := H_loc_fsubset23) (H_opsig_incl_y := H_opsig_fsubset23) *) a b }.
 
-Class Subtraction L1 L2 I1 I2 A := sub : both L1 I1 A -> both L2 I2 A -> both (L1 :|: L2) (I1 :|: I2) A.
+Class Subtraction  L1 L2 (* L3 *) I1 I2 (* I3 *) (A : choice_type) (* `(H_loc_fsubset13 : is_true (fsubset L1 L3)) `(H_opsig_fsubset13 : is_true (fsubset I1 I3)) `(H_loc_fsubset23 : is_true (fsubset L2 L3)) `(H_opsig_fsubset23 : is_true (fsubset I2 I3)) *) :=
+  sub : both L1 I1 A -> both L2 I2 A -> both (L1 :|: L2) (* L3 *) (I1 :|: I2) (* I3 *) A.
 Notation "a .- b" := (sub a b).
 (* Instance array_sub_inst {ws : wsize} {len: uint_size} {L1 L2 I1 I2} : Subtraction L1 L2 I1 I2 (nseq (@int ws) len) := { sub a b := a array_minus b }. *)
-(* Instance int_sub_inst {ws : wsize} {L1 L2 I1 I2} : Subtraction L1 L2 I1 I2 (@int ws) := { sub a b := int_sub a b }. *)
+Instance int_sub_inst {ws : wsize} {L1 L2 L3 I1 I2 I3}  `{H_loc_fsubset13 : is_true (fsubset L1 L3)} `{H_opsig_fsubset13 : is_true (fsubset I1 I3)} `{H_loc_fsubset23 : is_true (fsubset L2 L3)} `{H_opsig_fsubset23 : is_true (fsubset I2 I3)} : Subtraction L1 L2 (* L3 *) I1 I2 (* I3 *) (@int ws) (* H_loc_fsubset13 H_opsig_fsubset13 H_loc_fsubset23 H_opsig_fsubset23 *) := { sub a b := int_sub (* (H_loc_incl_x := H_loc_fsubset13) (H_opsig_incl_x := H_opsig_fsubset13) (H_loc_incl_y := H_loc_fsubset23) (H_opsig_incl_y := H_opsig_fsubset23) *) a b }.
 
-Class Multiplication (L1 L2 L3 : {fset Location}) (I1 I2 I3 : Interface) A `(H_loc_incl1 : List.incl L1 L3) (H_opsig_incl1 : List.incl I1 I3) (H_loc_incl2 : List.incl L2 L3) (H_opsig_incl2 : List.incl I2 I3) := mul : both L1 I1 A -> both L2 I2 A -> both L3 I3 A.
+Class Multiplication (L1 L2 (* L3 *) : {fset Location}) (I1 I2 (* I3 *) : Interface) A (* `(H_loc_incl1 : is_true (fsubset L1 L3)) (H_opsig_incl1 : is_true (fsubset I1 I3)) (H_loc_incl2 : is_true (fsubset L2 L3)) (H_opsig_incl2 : is_true (fsubset I2 I3)) *) := mul : both L1 I1 A -> both L2 I2 A -> both (L1 :|: L2) (* L3 *) (I1 :|: I2) (* I3 *)  A.
 Notation "a .* b" := (mul a b).
 (* Instance array_mul_inst {ws : wsize} {len: uint_size} { L1 L2 I1 I2} : Multiplication L1 L2 I1 I2 (nseq (@int ws) len) := { mul a b := a array_mul b }. *)
-Program Instance int_mul_inst {ws : wsize} { L1 L2 L3 : {fset Location} } { I1 I2 I3 : Interface} `{H_loc_incl1 : List.incl L1 L3} `{H_opsig_incl1 : List.incl I1 I3} `{H_loc_incl2 : List.incl L2 L3} `{H_opsig_incl2 : List.incl I2 I3} : Multiplication L1 L2 L3 I1 I2 I3 (@int ws) H_loc_incl1 H_opsig_incl1 H_loc_incl2 H_opsig_incl2 := { mul a b := int_mul a b }.
+Program Instance int_mul_inst {ws : wsize} { L1 L2 (* L3 *) : {fset Location} } { I1 I2 (* I3 *) : Interface} (* `{H_loc_incl1 : is_true (fsubset L1 L3)} `{H_opsig_incl1 : is_true (fsubset I1 I3)} `{H_loc_incl2 : is_true (fsubset L2 L3)} `{H_opsig_incl2 : is_true (fsubset I2 I3)} *) : Multiplication L1 L2 (* L3 *) I1 I2 (* I3 *) (@int ws) (* H_loc_incl1 H_opsig_incl1 H_loc_incl2 H_opsig_incl2 *) := { mul a b := int_mul a b }.
+Fail Next Obligation.
 
-Class Xor L1 L2 I1 I2 A := xor : both L1 I1 A -> both L2 I2 A -> both (L1 :|: L2) (I1 :|: I2) A.
+Class Xor (L1 L2 (* L3 *) : {fset Location}) (I1 I2 (* I3 *) : Interface) A (* `(H_loc_incl1 : is_true (fsubset L1 L3)) (H_opsig_incl1 : is_true (fsubset I1 I3)) (H_loc_incl2 : is_true (fsubset L2 L3)) (H_opsig_incl2 : is_true (fsubset I2 I3)) *) := xor : both L1 I1 A -> both L2 I2 A -> both (L1 :|: L2) (* L3 *) (I1 :|: I2) (* I3 *)  A.
 Notation "a .^ b" := (xor a b).
 
 (* Instance array_xor_inst {ws : wsize} {len: uint_size} {L1 L2 I1 I2} : Xor L1 L2 I1 I2 (nseq (@int ws) len) := { xor a b := a array_xor b }. *)
-(* Instance int_xor_inst {ws : wsize} {L1 L2 I1 I2} : Xor L1 L2 I1 I2 (@int ws) := { xor a b := int_xor a b }. *)
+Program Instance int_xor_inst {ws : wsize} {L1 L2 (* L3 *) I1 I2 (* I3 *)} (* `{H_loc_incl1 : is_true (fsubset L1 L3)} `{H_opsig_incl1 : is_true (fsubset I1 I3)} `{H_loc_incl2 : is_true (fsubset L2 L3)} `{H_opsig_incl2 : is_true (fsubset I2 I3)} *) : Xor L1 L2 (* L3 *) I1 I2 (* I3 *) (@int ws) (* H_loc_incl1 H_opsig_incl1 H_loc_incl2 H_opsig_incl2 *) := { xor a b := int_xor a b }.
+Fail Next Obligation.
 
 (* Definition new {A : choice_type} {len} : nseq A len := array_new_ default _. *)
 
@@ -135,43 +140,26 @@ Arguments as_nseq {_} {_} {_} {_}. (* array_or_seq. *)
 
 
 
-(* Check (fun x : array_or_seq 'nat fset0 (fset []) 25 => x : both0 (nseq 'nat 25)). *)
+(* Check (fun x : array_or_seq 'nat fset0 (fset []) 25 => x : both (fset []) ([interface]) (nseq 'nat 25)). *)
 
 (* Definition nseq_array_or_seq {A L I len} (a : both L I (nseq A len)) := *)
 (*   Build_array_or_seq A L I len (array_to_seq a) a. *)
 (* Canonical (* Structure *) nseq_array_or_seq. *)
 
-Program Definition nseq_array_or_seq {A L I len} (val : both L I (nseq A len)) : array_or_seq A L I len :=
-  {| as_seq := array_to_seq val ; as_nseq := val |}.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
+Equations nseq_array_or_seq {A L I len} (val : both L I (nseq A len)) : array_or_seq A L I len :=
+  nseq_array_or_seq val := {| as_seq := array_to_seq val ; as_nseq := val |}.
 Fail Next Obligation.
-
 
 Arguments nseq_array_or_seq {A} {L} {I} {len}.
 Check nseq_array_or_seq.
 Coercion nseq_array_or_seq : both >-> array_or_seq.
 Canonical Structure nseq_array_or_seq.
 
-(* Check (fun (x : both0 (nseq 'nat 25)) => x : array_or_seq 'nat fset0 (fset []) 25). *)
+(* Check (fun (x : both (fset []) ([interface]) (nseq 'nat 25)) => x : array_or_seq 'nat fset0 (fset []) 25). *)
 
-Program Definition seq_array_or_seq {A : choice_type} {L I} (a : both L I (seq A)) : array_or_seq A L I (seq_len a) :=
+(* TODO: use of is pure here is an issue!! *)
+Definition seq_array_or_seq {A : choice_type} {L I} (a : both L I (seq A)) : array_or_seq A L I (is_pure (seq_len (* (H_loc_incl_x := fsubsetxx _) (H_opsig_incl_x := fsubsetxx _) *) a : both L I _)) :=
   {| as_seq := a ; as_nseq := array_from_seq _ a ; |}.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Fail Next Obligation.
 
 Coercion seq_array_or_seq : both >-> array_or_seq.
 Canonical Structure seq_array_or_seq.
@@ -181,54 +169,15 @@ Canonical Structure seq_array_or_seq.
 (* Canonical (* Structure *) seq_array_or_seq. *)
 (* Print Canonical Projections . *)
 
-Program Definition array_index {A: choice_type} {len : uint_size} {L I} (s: array_or_seq A L I len) {WS} (i : both L I (@int WS)) :=
-  array_index (as_nseq s) i.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Fail Next Obligation.
-(* Definition array_index {A: choice_type} {len : uint_size} {L I} (s: both L I (nseq A len)) {WS} (i : both L I (@int WS)) := array_index s i. *)
-Notation " x .[ a ]" := (array_index x a) (at level 40).
-Program Definition array_upd {A: choice_type} {len : uint_size} {L I} (s: both L I (nseq A len)) {WS} (i: both L I (@int WS)) (new_v: both L I A) : both L I (nseq A len) := array_upd s i new_v.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
-Next Obligation.
-  intros.
-  apply incl_refl.
-Qed.
+Program Definition (* Equations *) array_index {A: choice_type} {len : uint_size} {L1 L2 I1 I2} (s: array_or_seq A L1 I1 len) {WS} (i : both L2 I2 (@int WS)) : both (L1 :|: L2) (I1 :|: I2) A :=
+  (* array_index s i :=  *)Hacspec_Lib.array_index (as_nseq s) i.
 Fail Next Obligation.
 
+(* Definition array_index {A: choice_type} {len : uint_size} {L I} (s: both L I (nseq A len)) {WS} (i : both L I (@int WS)) := array_index s i. *)
+Notation " x .[ a ]" := (array_index x a) (at level 40).
+Program Definition (* Equations *) array_upd {A: choice_type} {len : uint_size} {L I} (s: both L I (nseq A len)) {WS} (i: both L I (@int WS)) (new_v: both L I A) : both L I (nseq A len) :=
+  (* array_upd s i new_v := *) Hacspec_Lib.array_upd s i new_v.
+Fail Next Obligation.
 Notation " x .[ i ]<- a" := (array_upd x i a) (at level 40).
 
 (* Definition update {A : Type}  `{Default A} {len slen} (s : nseq A len) {WS} (start : @int WS) (start_a : array_or_seq A slen) : nseq A len := *)
@@ -303,13 +252,16 @@ Axiom array_to_be_uint64s : forall {A l}, nseq A l -> seq uint64.
 Notation to_be_U64s := array_to_be_uint64s.
 Notation classify := id.
 Notation U64_from_U8 := uint64_from_uint8.
-Definition Build_Range_t (a b : nat) := (a,b). (* match (b - a)%nat with O => [] | S n => match b with | O => [] | S b' => Build_Range_t a b' ++ [b] end end. *)
+(* Definition Build_Range_t (a b : nat) := (a,b). (* match (b - a)%nat with O => [] | S n => match b with | O => [] | S b' => Build_Range_t a b' ++ [b] end end. *) *)
+Definition Build_Range_t {WS L I} (a b : both L I (int WS)) := (a,b).
 Notation declassify_eq := eq.
 Notation String_t := String.string.
 
-Notation "'i8(' v ')'" := (lift_to_both (v : int8) : both0 _).
-Notation "'i16(' v ')'" := (lift_to_both (v : int16) : both0 _).
-Notation "'i32(' v ')'" := (lift_to_both (v : int32) : both0 _).
-Notation "'i64(' v ')'" := (lift_to_both (v : int64) : both0 _).
-Notation "'i128(' v ')'" := (lift_to_both (v : int128) : both0 _).
+Notation "'i8(' v ')'" := (ret_both (v : int8) : both (fset []) ([interface]) _).
+Notation "'i16(' v ')'" := (ret_both (v : int16) : both (fset []) ([interface]) _).
+Notation "'i32(' v ')'" := (ret_both (v : int32) : both (fset []) ([interface]) _).
+Notation "'i64(' v ')'" := (ret_both (v : int64) : both (fset []) ([interface]) _).
+Notation "'i128(' v ')'" := (ret_both (v : int128) : both (fset []) ([interface]) _).
+
+Notation into_iter := (fun x => x).
 (** end of: Should be moved to Hacspec_Lib.v **)
