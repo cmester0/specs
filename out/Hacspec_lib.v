@@ -121,8 +121,8 @@ Fail Next Obligation.
 (* Coercion mixin : class_of >-> mixin_of. *)
 (* Coercion sort : type >-> choice_type. *)
 
-Structure array_or_seq A L I len :=
-  { as_nseq :> both L I (nseq A len) ;
+Structure array_or_seq A L I (len : nat) :=
+  { as_nseq :> both L I (nseq_ A len) ;
     as_seq :> both L I (seq A)
   }.
 Print as_seq.
@@ -146,7 +146,7 @@ Arguments as_nseq {_} {_} {_} {_}. (* array_or_seq. *)
 (*   Build_array_or_seq A L I len (array_to_seq a) a. *)
 (* Canonical (* Structure *) nseq_array_or_seq. *)
 
-Equations nseq_array_or_seq {A L I len} (val : both L I (nseq A len)) : array_or_seq A L I len :=
+Equations nseq_array_or_seq {A L I len} (val : both L I (nseq_ A len)) : array_or_seq A L I len :=
   nseq_array_or_seq val := {| as_seq := array_to_seq val ; as_nseq := val |}.
 Fail Next Obligation.
 
@@ -157,24 +157,119 @@ Canonical Structure nseq_array_or_seq.
 
 (* Check (fun (x : both (fset []) ([interface]) (nseq 'nat 25)) => x : array_or_seq 'nat fset0 (fset []) 25). *)
 
-(* TODO: use of is pure here is an issue!! *)
-Definition seq_array_or_seq {A : choice_type} {L I} (a : both L I (seq A)) : array_or_seq A L I (is_pure (seq_len (* (H_loc_incl_x := fsubsetxx _) (H_opsig_incl_x := fsubsetxx _) *) a : both L I _)) :=
-  {| as_seq := a ; as_nseq := array_from_seq _ a ; |}.
+(* (* TODO: use of is pure here is an issue!! *) *)
+(* Definition seq_array_or_seq {A : choice_type} {L I} (a : both L I (seq A)) : array_or_seq A L I (is_pure (seq_len (* (H_loc_incl_x := fsubsetxx _) (H_opsig_incl_x := fsubsetxx _) *) a : both L I _)) := *)
+(*   {| as_seq := a ; as_nseq := array_from_seq _ a ; |}. *)
 
-Coercion seq_array_or_seq : both >-> array_or_seq.
-Canonical Structure seq_array_or_seq.
+(* Coercion seq_array_or_seq : both >-> array_or_seq. *)
+(* Canonical Structure seq_array_or_seq. *)
 
 (* Definition seq_array_or_seq {A L I len} (a : both L I (seq A)) := *)
 (*   Build_array_or_seq A L I len a (array_from_seq (from_uint_size len) a). *)
 (* Canonical (* Structure *) seq_array_or_seq. *)
 (* Print Canonical Projections . *)
 
-Program Definition (* Equations *) array_index {A: choice_type} {len : uint_size} {L1 L2 I1 I2} (s: array_or_seq A L1 I1 len) {WS} (i : both L2 I2 (@int WS)) : both (L1 :|: L2) (I1 :|: I2) A :=
+Program Definition (* Equations *) array_index {A: choice_type} {len : nat} {L1 L2 I1 I2} (s: array_or_seq A L1 I1 len) {WS} (i : both L2 I2 (@int WS)) : both (L1 :|: L2) (I1 :|: I2) A :=
   (* array_index s i :=  *)Hacspec_Lib.array_index (as_nseq s) i.
 Fail Next Obligation.
 
 (* Definition array_index {A: choice_type} {len : uint_size} {L I} (s: both L I (nseq A len)) {WS} (i : both L I (@int WS)) := array_index s i. *)
-Notation " x .[ a ]" := (array_index x a) (at level 40).
+
+(* Definition size : forall {L I A len} {B} (H : {B = nseq A len} + {(B = seq A)}) (x : both L I B) `{len : match H with left _ => True | right b => len = eq_rect_r (fun B0 : choice_type => both L I B0 -> uint_size) (fun x' => is_pure (seq_len x')) b x end}, uint_size. *)
+(* Proof. *)
+(*   intros. *)
+(*   destruct H ; subst. *)
+(*   refine len. *)
+(*   refine (is_pure (seq_len x)). *)
+(*   Show Proof. *)
+(*   Show Proof. *)
+(* Qed.   *)
+
+(* Close Scope hacspec_scope. *)
+(* Print Prelude.positive. *)
+(* Definition len_of_nseq (H : choice_type) `{contra : match H with *)
+(*                            | chUnit => True *)
+(*                            | chMap (chFin (mkpos (S n) cond_pos) ) (A) => True *)
+(*                            | _ => False *)
+(*                                                     end} : nat. *)
+(*   refine *)
+(*   (match H as K return match K with *)
+(*                            | chUnit => True *)
+(*                            | chMap (chFin (mkpos (S n) cond_pos)) (A) => True *)
+(*                            | _ => False *)
+(*                                         end -> nat with *)
+(*    | chUnit => fun _ => 0%nat *)
+(*    | chMap (chFin (mkpos pos cond_pos)) A => *)
+(*        match pos as n return *)
+(*              match n with *)
+(*              | O => False *)
+(*              | _ => True *)
+(*              end -> nat *)
+(*        with *)
+(*        | O => fun m_contra => False_rect nat m_contra *)
+(*        | S n => fun _ => S n *)
+(*        end *)
+(*    | _ => fun m_contra => False_rect nat m_contra *)
+(*    end contra). *)
+
+Definition n_seq_array_or_seq {L I A} {B} (x : both L I B)
+           `(contra : match B with
+                      | chUnit => True
+                      | chMap (chFin (@mkpos (S n) _)) (C) => C = A
+                      | chMap 'nat (C) => C = A
+                      | _ => False
+                      end) :
+  let len := (match B as K return
+                    match K with
+                    | chUnit => True
+                    | chMap (chFin (@mkpos (S n) _)) (C) => C = A
+                    | chMap 'nat (C) => C = A
+                    | _ => False
+                    end -> nat
+              with
+              | chUnit => fun _ => 0%nat
+              | chMap (chFin (@mkpos p _)) C =>
+                  fun m_contra => 
+                    match p as p_ return match p_ with
+                                         | O => False
+                                         | _ => C = A
+                                         end -> nat
+                          with
+                  | O => fun m_contra => False_rect nat m_contra
+                  | S n => fun _ => S n
+                  end m_contra
+              | chMap 'nat C =>
+                  fun m_contra => 3%nat
+              | _ => fun m_contra => False_rect nat m_contra
+              end contra) in
+  array_or_seq A L I len.
+Proof.
+  intros.
+  destruct B ; try contradiction contra.
+  - change 'unit with (nseq_ A len) in x.
+    exact {| as_seq := array_to_seq x ; as_nseq := x |}.
+  - destruct B1 ; try contradiction contra ; simpl in *.
+    + subst.
+      change (chMap 'nat A) with (seq A) in x.
+      exact ({| as_seq := x ; as_nseq := array_from_seq _ x ; |}).
+    + destruct n.
+      destruct pos.
+      * contradiction.
+      * subst.
+        replace (chMap (chFin _) A) with (nseq_ A len) in x.
+        2:{
+          simpl.
+          f_equal.
+          f_equal.
+          apply (ssrbool.elimT (positive_eqP _ _)).
+          unfold positive_eq.
+          apply eqtype.eq_refl.
+        }
+        exact {| as_seq := array_to_seq x ; as_nseq := x |}.
+Defined.
+
+Notation " x .[ a ]" := (array_index (n_seq_array_or_seq x _) a) (at level 40).
+
 Program Definition (* Equations *) array_upd {A: choice_type} {len : uint_size} {L I} (s: both L I (nseq A len)) {WS} (i: both L I (@int WS)) (new_v: both L I A) : both L I (nseq A len) :=
   (* array_upd s i new_v := *) Hacspec_Lib.array_upd s i new_v.
 Fail Next Obligation.
@@ -187,13 +282,13 @@ Notation " x .[ i ]<- a" := (array_upd x i a) (at level 40).
 (* Axiom to_le_bytes : forall {ws : wsize} {len}, nseq (@int ws) len -> seq int8. *)
 (* Definition from_seq {A : Type}  `{Default A} {len slen} (s : array_or_seq A slen) : nseq A len := array_from_seq _ (as_seq s). *)
 
-Notation Seq_t := seq.
+Notation t_Seq := seq.
 (* Notation len := (fun s => seq_len s : int32). *)
 
 (* Definition array_slice {a: Type} `{Default a} {len : nat} (input: nseq a len) {WS} (start: @int WS) (slice_len: @int WS) : seq a := slice (array_to_seq input) (unsigned start) (unsigned (start .+ slice_len)). *)
 (* Notation slice := array_slice. *)
 (* Definition seq_new {A: Type} `{Default A} {WS} (len: @int WS) : seq A := seq_new (unsigned len). *)
-Notation new_seq := seq_new.
+Notation new := seq_new.
 Notation num_exact_chunks := seq_num_exact_chunks.
 Notation get_exact_chunk := seq_get_exact_chunk.
 (* Definition set_chunk {a: Type} `{Default a} {len} (s: seq a) {WS} (chunk_len: @int WS) (chunk_num: @int WS) (chunk: array_or_seq a len) : seq a := seq_set_chunk s (unsigned chunk_len) (unsigned chunk_num) (as_seq chunk). *)
@@ -253,7 +348,7 @@ Notation to_be_U64s := array_to_be_uint64s.
 Notation classify := id.
 Notation U64_from_U8 := uint64_from_uint8.
 (* Definition Build_Range_t (a b : nat) := (a,b). (* match (b - a)%nat with O => [] | S n => match b with | O => [] | S b' => Build_Range_t a b' ++ [b] end end. *) *)
-Definition Build_Range_t {WS L I} (a b : both L I (int WS)) := (a,b).
+Definition Build_Range {WS L I} (a b : both L I (int WS)) := (a,b).
 Notation declassify_eq := eq.
 Notation String_t := String.string.
 
