@@ -16,9 +16,9 @@ use hacspec_concordium_derive::*;
 pub use crate::ovn_traits::*;
 
 // // pub use create::ovn_traits::*;
-// use create::Z_Field;
+// use create::Field;
 // use create::Group;
-// use create::Z_Field;
+// use create::Field;
 
 use hacspec_lib::*;
 
@@ -34,63 +34,61 @@ pub struct Z_curve {
 }
 
 impl hacspec_concordium::Deserial for Z_curve {
-    // TODO:
-    fn deserial<R: Read>(_source: &mut R) -> ParseResult<Self> {
-        let buffer: &mut [u8] = &mut [];
-        let _ = _source.read(buffer)?;
+    fn deserial<R: Read>(source: &mut R) -> ParseResult<Self> {
+        let temp : Vec<u8> = source.get()?;
 
         Ok(Z_curve {
-            val: Scalar::from_public_byte_seq_be(Seq::<u8>::from_native_slice(buffer)),
+            val: Scalar::from_public_byte_seq_be(Seq::<u8>::from_vec(temp)),
         })
     }
 }
 
 impl hacspec_concordium::Serial for Z_curve {
-    // TODO:
-    fn serial<W: Write>(&self, _out: &mut W) -> Result<(), W::Err> {
-        let _ = _out.write(self.val.to_public_byte_seq_be().native_slice());
-        Ok(())
+    fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
+        let mut v : Vec<u8> = Vec::new();
+        for x in self.val.to_public_byte_seq_be().native_slice() {
+            v.push(x.clone());
+        }
+        v.serial(out)
     }
 }
 
-impl Z_Field for Z_curve {
-    type field_type = Z_curve;
-
-    fn q() -> Self::field_type {
+impl Field for Z_curve {
+    fn q() -> Self {
         Z_curve {
             val: Scalar::from_hex(
                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
             ),
-        } // TODO: Scalar::modulo_value;
+        }
     }
 
-    fn random_field_elem(random: u32) -> Self::field_type {
+    fn random_field_elem(random: u32) -> Self {
         Z_curve {
             val: Scalar::from_literal(random as u128),
         }
     }
 
-    fn field_zero() -> Self::field_type {
+    fn field_zero() -> Self {
         Z_curve {
             val: Scalar::from_literal(0u128),
         } // Scalar::ZERO()
     }
 
-    fn field_one() -> Self::field_type {
+    fn field_one() -> Self {
         Z_curve {
             val: Scalar::from_literal(1u128),
         } // Scalar::ONE()
     }
 
-    fn add(x: Self::field_type, y: Self::field_type) -> Self::field_type {
+    fn add(x: Self, y: Self) -> Self {
         Z_curve { val: x.val + y.val }
     }
 
-    fn sub(x: Self::field_type, y: Self::field_type) -> Self::field_type {
+    fn sub(x: Self, y: Self) -> Self {
         Z_curve { val: x.val - y.val }
     }
 
-    fn mul(x: Self::field_type, y: Self::field_type) -> Self::field_type {
+    fn mul(x: Self, y: Self) -> Self {
         Z_curve { val: x.val * y.val }
     }
 }
@@ -101,47 +99,55 @@ pub struct Group_curve {
 }
 
 impl hacspec_concordium::Deserial for Group_curve {
-    // TODO:
-    fn deserial<R: Read>(_source: &mut R) -> ParseResult<Self> {
-        let buffer: &mut [u8] = &mut [];
-        let _ = _source.read(buffer)?;
-        if let [0] = buffer {
-            return Ok(Group_curve {
-                val: Point::AtInfinity,
-            });
+    fn deserial<R: Read>(source: &mut R) -> ParseResult<Self> {
+        let b : bool = source.get()?;
+        if b {
+            let vx : Vec<u8> = source.get()?;
+            let vy : Vec<u8> = source.get()?;
+
+            Ok(Group_curve {
+                val: Point::Affine((
+                    FieldElement::from_public_byte_seq_be(Seq::<u8>::from_vec(vx)),
+                    FieldElement::from_public_byte_seq_be(Seq::<u8>::from_vec(vy)),
+                )),
+            })
+        } else {
+            Ok(Group_curve { val: Point::AtInfinity })
         }
-
-        let buffer_y: &mut [u8] = &mut [];
-        let _ = _source.read(buffer_y)?;
-
-        Ok(Group_curve {
-            val: Point::Affine((
-                FieldElement::from_public_byte_seq_be(Seq::<u8>::from_native_slice(buffer)),
-                FieldElement::from_public_byte_seq_be(Seq::<u8>::from_native_slice(buffer_y)),
-            )),
-        })
     }
 }
 
 impl hacspec_concordium::Serial for Group_curve {
-    // TODO:
-    fn serial<W: Write>(&self, _out: &mut W) -> Result<(), W::Err> {
+    fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
         match self.val {
             Point::Affine(p) => {
-                _out.write(x(p).to_public_byte_seq_be().native_slice());
-                _out.write(y(p).to_public_byte_seq_be().native_slice())
+                true.serial(out)?;
+
+                let mut vx : Vec<u8> = Vec::new();
+                for x in x(p).to_public_byte_seq_be().native_slice() {
+                    vx.push(x.clone());
+                }
+                let _ = vx.serial(out)?;
+
+                let mut vy : Vec<u8> = Vec::new();
+                for y in y(p).to_public_byte_seq_be().native_slice() {
+                    vy.push(y.clone());
+                }
+                let _ = vy.serial(out)?;
             }
-            Point::AtInfinity => _out.write(&[0]),
+            Point::AtInfinity => {
+                let _ = false.serial(out)?;
+            },
         };
         Ok(())
     }
 }
 
-impl Group<Z_curve> for Group_curve {
-    type group_type = Group_curve;
+impl Group for Group_curve {
+    type Z = Z_curve;
 
     // https://eips.ethereum.org/EIPS/eip-2333
-    fn g() -> Self::group_type {
+    fn g() -> Self {
         #[rustfmt::skip]
         let gx = PBytes32([
             0x79u8, 0xBEu8, 0x66u8, 0x7Eu8, 0xF9u8, 0xDCu8, 0xBBu8, 0xACu8,
@@ -162,45 +168,45 @@ impl Group<Z_curve> for Group_curve {
                 FieldElement::from_public_byte_seq_be(gy),
             )),
         }
-    } // TODO
+    }
 
-    fn pow(g: Self::group_type, x: <Z_curve as Z_Field>::field_type) -> Self::group_type {
+    fn pow(g: Self, x: Z_curve) -> Self {
         Group_curve {
             val: point_mul(x.val, g.val),
         }
     }
 
-    fn g_pow(x: <Z_curve as Z_Field>::field_type) -> Self::group_type {
+    fn g_pow(x: Z_curve) -> Self {
         Group_curve {
             val: point_mul_base(x.val),
         }
         // Self::pow(Self::g(), x)
     }
 
-    fn group_one() -> Self::group_type {
-        Self::g_pow(<Z_curve as Z_Field>::field_zero())
+    fn group_one() -> Self {
+        Self::g_pow(<Z_curve as Field>::field_zero())
     }
 
-    fn prod(x: Self::group_type, y: Self::group_type) -> Self::group_type {
+    fn prod(x: Self, y: Self) -> Self {
         Group_curve {
             val: point_add(x.val, y.val),
         }
     }
 
-    fn inv(x: Self::group_type) -> Self::group_type {
+    fn inv(x: Self) -> Self {
         Group_curve {
             val: match x.val {
                 Point::Affine((a, b)) => Point::Affine((a, FieldElement::from_literal(0u128) - b)),
-                Point::AtInfinity => Point::AtInfinity, // TODO?
+                Point::AtInfinity => Point::AtInfinity,
             },
         }
     }
 
-    fn div(x: Self::group_type, y: Self::group_type) -> Self::group_type {
+    fn div(x: Self, y: Self) -> Self {
         Self::prod(x, Self::inv(y))
     }
 
-    fn hash(x: Vec<Self::group_type>) -> <Z_curve as Z_Field>::field_type {
+    fn hash(x: Vec<Self>) -> Z_curve {
         // fp_hash_to_field
         Z_curve::field_one() // TODO: bls12-381 hash to curve?
     }

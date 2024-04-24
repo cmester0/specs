@@ -24,21 +24,21 @@ Import choice.Choice.Exports.
 
 Obligation Tactic := (* try timeout 8 *) solve_ssprove_obligations.
 
-Class t_Field (Self : choice_type) := {
+Class t_Field (v_Self : choice_type) := {
   f_q_loc : {fset Location} ;
-  f_q : (forall {L1 I1}, both L1 I1 'unit -> both (L1 :|: f_q_loc) I1 v_Self) ;
+  f_q : (both 'unit -> both v_Self) ;
   f_random_field_elem_loc : {fset Location} ;
-  f_random_field_elem : (forall {L1 I1}, both L1 I1 int32 -> both (L1 :|: f_random_field_elem_loc) I1 v_Self) ;
+  f_random_field_elem : (both int32 -> both v_Self) ;
   f_field_zero_loc : {fset Location} ;
-  f_field_zero : (forall {L1 I1}, both L1 I1 'unit -> both (L1 :|: f_field_zero_loc) I1 v_Self) ;
+  f_field_zero : (both 'unit -> both v_Self) ;
   f_field_one_loc : {fset Location} ;
-  f_field_one : (forall {L1 I1}, both L1 I1 'unit -> both (L1 :|: f_field_one_loc) I1 v_Self) ;
+  f_field_one : (both 'unit -> both v_Self) ;
   f_add_loc : {fset Location} ;
-  f_add : (forall {L1 L2 I1 I2}, both L1 I1 v_Self -> both L2 I2 v_Self -> both (L1 :|: L2 :|: f_add_loc) (I1 :|: I2) v_Self) ;
+  f_add : (both v_Self -> both v_Self -> both v_Self) ;
   f_sub_loc : {fset Location} ;
-  f_sub : (forall {L1 L2 I1 I2}, both L1 I1 v_Self -> both L2 I2 v_Self -> both (L1 :|: L2 :|: f_sub_loc) (I1 :|: I2) v_Self) ;
+  f_sub : (both v_Self -> both v_Self -> both v_Self) ;
   f_mul_loc : {fset Location} ;
-  f_mul : (forall {L1 L2 I1 I2}, both L1 I1 v_Self -> both L2 I2 v_Self -> both (L1 :|: L2 :|: f_mul_loc) (I1 :|: I2) v_Self) ;
+  f_mul : (both v_Self -> both v_Self -> both v_Self) ;
 }.
 Hint Unfold f_q_loc.
 Hint Unfold f_random_field_elem_loc.
@@ -48,7 +48,7 @@ Hint Unfold f_add_loc.
 Hint Unfold f_sub_loc.
 Hint Unfold f_mul_loc.
 
-Class t_Group (Self : choice_type) := {
+Class t_Group (v_Self : choice_type) := {
   f_Z : choice_type ;
   f_Z_t_Field :> (t_Field f_Z) ;
   f_Z_t_Serialize :> (t_Serialize f_Z) ;
@@ -60,21 +60,21 @@ Class t_Group (Self : choice_type) := {
   f_Z_t_Copy :> (t_Copy f_Z) ;
   f_Z_t_Sized :> (t_Sized f_Z) ;
   f_g_loc : {fset Location} ;
-  f_g : (forall {L1 I1}, both L1 I1 'unit -> both (L1 :|: f_g_loc) I1 v_Self) ;
+  f_g : (both 'unit -> both v_Self) ;
   f_g_pow_loc : {fset Location} ;
-  f_g_pow : (forall {L1 I1}, both L1 I1 f_Z -> both (L1 :|: f_g_pow_loc) I1 v_Self) ;
+  f_g_pow : (both f_Z -> both v_Self) ;
   f_pow_loc : {fset Location} ;
-  f_pow : (forall {L1 L2 I1 I2}, both L1 I1 v_Self -> both L2 I2 f_Z -> both (L1 :|: L2 :|: f_pow_loc) (I1 :|: I2) v_Self) ;
+  f_pow : (both v_Self -> both f_Z -> both v_Self) ;
   f_group_one_loc : {fset Location} ;
-  f_group_one : (forall {L1 I1}, both L1 I1 'unit -> both (L1 :|: f_group_one_loc) I1 v_Self) ;
+  f_group_one : (both 'unit -> both v_Self) ;
   f_prod_loc : {fset Location} ;
-  f_prod : (forall {L1 L2 I1 I2}, both L1 I1 v_Self -> both L2 I2 v_Self -> both (L1 :|: L2 :|: f_prod_loc) (I1 :|: I2) v_Self) ;
+  f_prod : (both v_Self -> both v_Self -> both v_Self) ;
   f_inv_loc : {fset Location} ;
-  f_inv : (forall {L1 I1}, both L1 I1 v_Self -> both (L1 :|: f_inv_loc) I1 v_Self) ;
+  f_inv : (both v_Self -> both v_Self) ;
   f_div_loc : {fset Location} ;
-  f_div : (forall {L1 L2 I1 I2}, both L1 I1 v_Self -> both L2 I2 v_Self -> both (L1 :|: L2 :|: f_div_loc) (I1 :|: I2) v_Self) ;
+  f_div : (both v_Self -> both v_Self -> both v_Self) ;
   f_hash_loc : {fset Location} ;
-  f_hash : (forall {L1 I1}, both L1 I1 (t_Vec v_Self t_Global) -> both (L1 :|: f_hash_loc) I1 f_Z) ;
+  f_hash : (both (t_Vec v_Self t_Global) -> both f_Z) ;
 }.
 Hint Unfold f_g_loc.
 Hint Unfold f_g_pow_loc.

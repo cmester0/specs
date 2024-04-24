@@ -16,95 +16,134 @@ use hacspec_concordium_derive::*;
 pub use crate::ovn_traits::*;
 
 // // pub use create::ovn_traits::*;
-// use create::Z_Field;
+// use create::Field;
 // use create::Group;
-// use create::Z_Field;
+// use create::Field;
 
 ////////////////////
 // Impl for Z/89Z //
 ////////////////////
 
-#[derive(Clone, Copy)]
-pub struct z_89 {}
-impl Z_Field for z_89 {
-    type field_type = u32;
-    fn q() -> Self::field_type {
-        89u32
+#[derive(Clone, Copy, PartialEq, Eq, hacspec_concordium::Serial, hacspec_concordium::Deserial)]
+pub struct z_89 { val : u8 }
+
+// impl hacspec_concordium::Deserial for z_89 {
+//     // TODO:
+//     fn deserial<R: Read>(source: &mut R) -> ParseResult<Self> {
+//         let v : u8 = source.get()?;
+//         Ok(z_89 {
+//             val: v,
+//         })
+//     }
+// }
+
+// impl hacspec_concordium::Serial for z_89 {
+//     // TODO:
+//     fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
+//         self.val.serial(out)
+//     }
+// }
+
+impl Field for z_89 {
+    fn q() -> Self {
+        z_89{ val: 89u8}
     } // Prime order
-    fn random_field_elem(random: u32) -> Self::field_type {
-        random % (Self::q() - 1)
+    fn random_field_elem(random: u32) -> Self {
+        z_89{ val: random as u8 % (Self::q().val - 1) }
     }
 
-    fn field_zero() -> Self::field_type {
-        0u32
+    fn field_zero() -> Self {
+        z_89{ val: 0u8 }
     }
 
-    fn field_one() -> Self::field_type {
-        1u32
+    fn field_one() -> Self {
+        z_89{ val: 1u8 }
     }
 
-    fn add(x: Self::field_type, y: Self::field_type) -> Self::field_type {
-        (x + y) % (Self::q() - 1)
+    fn add(x: Self, y: Self) -> Self {
+        z_89{ val: (x.val + y.val) % (Self::q().val - 1) }
     }
 
-    fn sub(x: Self::field_type, y: Self::field_type) -> Self::field_type {
-        (x + (Self::q() - 1) - y) % (Self::q() - 1)
+    fn sub(x: Self, y: Self) -> Self {
+        z_89{ val: (x.val + (Self::q().val - 1) - y.val) % (Self::q().val - 1) }
     }
 
-    fn mul(x: Self::field_type, y: Self::field_type) -> Self::field_type {
-        (x * y) % (Self::q() - 1)
+    fn mul(x: Self, y: Self) -> Self {
+        z_89{ val: (((x.val as u16) * (y.val as u16)) % ((Self::q().val - 1) as u16)) as u8 }
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct g_z_89 {}
-impl Group<z_89> for g_z_89 {
-    type group_type = u32;
+#[derive(Clone, Copy, PartialEq, Eq, hacspec_concordium::Serial, hacspec_concordium::Deserial)]
+pub struct g_z_89 { val : u8 }
 
-    fn g() -> Self::group_type {
-        3u32
+// impl hacspec_concordium::Deserial for g_z_89 {
+//     // TODO:
+//     fn deserial<R: Read>(source: &mut R) -> ParseResult<Self> {
+//         let v : u8 = source.get()?;
+
+//         Ok(g_z_89 {
+//             val: v,
+//         })
+//     }
+// }
+
+// impl hacspec_concordium::Serial for g_z_89 {
+//     // TODO:
+//     fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
+//         self.val.serial(out)
+//     }
+// }
+
+
+impl Group for g_z_89 {
+    type Z = z_89;
+    
+    fn g() -> Self {
+        g_z_89 { val: 3u8 }
     } // Generator (elemnent of group)
 
-    fn hash(x: Vec<Self::group_type>) -> <z_89 as Z_Field>::field_type {
+    fn hash(x: Vec<Self>) -> z_89 {
         let mut res = z_89::field_one();
         for y in x {
-            res = z_89::mul(y, res);
+            res = z_89::mul(z_89{val: y.val}, res);
         }
         res // TODO
     }
 
-    fn g_pow(x: <z_89 as Z_Field>::field_type) -> Self::group_type {
+    fn g_pow(x: z_89) -> Self {
         Self::pow(Self::g(), x)
     }
 
     // TODO: use repeated squaring instead!
-    fn pow(g: Self::group_type, x: <z_89 as Z_Field>::field_type) -> Self::group_type {
+    fn pow(g: Self, x: z_89) -> Self {
         let mut result = Self::group_one();
-        for i in 0..(x % (z_89::q() - 1)) {
+        for _ in 0..(x.val % (z_89::q().val - 1)) {
             result = Self::prod(result, g);
         }
         result
     }
 
-    fn group_one() -> Self::group_type {
-        1
+    fn group_one() -> Self {
+        g_z_89 { val: 1 }
     }
 
-    fn prod(x: Self::group_type, y: Self::group_type) -> Self::group_type {
-        ((x % z_89::q()) * (y % z_89::q())) % z_89::q()
+    fn prod(x: Self, y: Self) -> Self {
+        let q_val = z_89::q().val;
+        g_z_89 { val: ((((x.val % q_val) as u16) * ((y.val % q_val) as u16)) % (q_val as u16)) as u8 }
     }
 
-    fn inv(x: Self::group_type) -> Self::group_type {
+    fn inv(x: Self) -> Self {
         for j in 0..89 {
-            if Self::prod(x, j) == Self::group_one() {
-                return j;
+            let value = g_z_89 {val: j};
+            if Self::prod(x, value) == Self::group_one() {
+                return value;
             }
         }
         assert!(false);
         return x;
     }
 
-    fn div(x: Self::group_type, y: Self::group_type) -> Self::group_type {
+    fn div(x: Self, y: Self) -> Self {
         Self::prod(x, Self::inv(y))
     }
 }

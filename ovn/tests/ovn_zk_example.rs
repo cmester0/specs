@@ -15,10 +15,10 @@ extern crate quickcheck_macros;
 #[cfg(test)]
 use quickcheck::*;
 
-pub use bls12_381::{*, Scalar as BlsScalar};
+pub use bls12_381::{Scalar as BlsScalar, *};
+use core::marker::PhantomData;
 pub use group::{ff::Field, Group};
 pub use hacspec_ovn::{ovn_zk_secp256k1::*, ovn_zkgroup::*};
-use core::marker::PhantomData;
 
 use rand_core::{RngCore, *};
 // use quickcheck::RngCore;
@@ -34,7 +34,9 @@ struct GroupBits<const n: usize> {
 
 impl From<BlsScalar> for GroupBits<32> {
     fn from(value: BlsScalar) -> Self {
-        Self { val: value.to_bytes() }
+        Self {
+            val: value.to_bytes(),
+        }
     }
 }
 
@@ -46,10 +48,10 @@ impl Into<BlsScalar> for GroupBits<32> {
 
 impl From<BipScalar> for GroupBits<32> {
     fn from(value: BipScalar) -> Self {
-        let mut val : [u8; 32] = [0u8; 32];
+        let mut val: [u8; 32] = [0u8; 32];
         let temp = value.to_be_bytes();
         for i in 0..32 {
-val[i] = temp[i];
+            val[i] = temp[i];
         }
         Self { val }
     }
@@ -60,7 +62,6 @@ impl Into<BipScalar> for GroupBits<32> {
         BipScalar::from_be_bytes(&self.val)
     }
 }
-
 
 ////////////////////////////
 // Group operations tests //
@@ -175,8 +176,7 @@ pub fn test_params_of_group<
     G: MGroup,
     S: Serialize + From<G::Scalar> + Into<G::Scalar>,
     A: HasActions,
->()
-{
+>() {
     // Setup the context
     let mut ctx = hacspec_concordium::test_infrastructure::ReceiveContextTest::empty();
     let parameter = RegisterParam::<G::Scalar, S> {
@@ -199,13 +199,14 @@ pub fn test_params_of_group<
 
 #[test]
 pub fn test_params_of_group_zk259() {
-    test_params_of_group::<Point, GroupBits<32>, hacspec_concordium::test_infrastructure::ActionsTree>()
+    test_params_of_group::<Point, GroupBits<32>, hacspec_concordium::test_infrastructure::ActionsTree>(
+    )
 }
-
 
 #[test]
 pub fn test_params_of_group_bls12_381_real() {
-    test_params_of_group::<Gt, GroupBits<32>, hacspec_concordium::test_infrastructure::ActionsTree>()
+    test_params_of_group::<Gt, GroupBits<32>, hacspec_concordium::test_infrastructure::ActionsTree>(
+    )
 }
 
 #[cfg(test)]
@@ -224,8 +225,7 @@ pub fn test_correctness<
     cvp_zkp_random_ws2: [G::Scalar; n],
     cvp_zkp_random_rs2: [G::Scalar; n],
     cvp_zkp_random_ds2: [G::Scalar; n],
-) -> bool
-{
+) -> bool {
     // Setup the context
     let ctx = hacspec_concordium::test_infrastructure::ReceiveContextTest::empty();
 
@@ -236,13 +236,16 @@ pub fn test_correctness<
             rp_i: i as u32,
             rp_xi: xis[i],
             rp_zkp_random: rp_zkp_randoms[i],
-        phantom: PhantomData,
+            phantom: PhantomData,
         };
         let parameter_bytes = to_bytes(&parameter);
         (_, state) =
-            register_vote::<G, S, n, A>(ctx.clone().set_parameter(&parameter_bytes), state).unwrap();
+            register_vote::<G, S, n, A>(ctx.clone().set_parameter(&parameter_bytes), state)
+                .unwrap();
     }
 
+    assert!(false, "Got here 2");
+    
     for i in 0..n {
         let parameter = CastVoteParam::<G::Scalar, S> {
             cvp_i: i as u32,
@@ -251,11 +254,12 @@ pub fn test_correctness<
             cvp_zkp_random_r: cvp_zkp_random_rs1[i],
             cvp_zkp_random_d: cvp_zkp_random_ds1[i],
             cvp_vote: votes[i],
-        phantom: PhantomData,
+            phantom: PhantomData,
         };
         let parameter_bytes = to_bytes(&parameter);
         (_, state) =
-            commit_to_vote::<G, S, n, A>(ctx.clone().set_parameter(&parameter_bytes), state).unwrap();
+            commit_to_vote::<G, S, n, A>(ctx.clone().set_parameter(&parameter_bytes), state)
+                .unwrap();
     }
 
     for i in 0..n {
@@ -266,12 +270,14 @@ pub fn test_correctness<
             cvp_zkp_random_r: cvp_zkp_random_rs2[i],
             cvp_zkp_random_d: cvp_zkp_random_ds2[i],
             cvp_vote: votes[i],
-        phantom: PhantomData,
+            phantom: PhantomData,
         };
         let parameter_bytes = to_bytes(&parameter);
         (_, state) =
             cast_vote::<G, S, n, A>(ctx.clone().set_parameter(&parameter_bytes), state).unwrap();
     }
+
+    assert!(false, "Got here 3");
 
     let parameter = TallyParameter {};
     let parameter_bytes = to_bytes(&parameter);
@@ -291,8 +297,11 @@ pub fn test_correctness<
 }
 
 #[cfg(test)]
-fn randomized_full_test<G: MGroup, S: Serialize + From<G::Scalar> + Into<G::Scalar>, const n: usize>() -> bool
-{
+fn randomized_full_test<
+    G: MGroup,
+    S: Serialize + From<G::Scalar> + Into<G::Scalar>,
+    const n: usize,
+>() -> bool {
     let mut votes: [bool; n] = [false; n];
     let mut xis: [G::Scalar; n] = [G::Scalar::ONE; n];
     let mut rp_zkp_randoms: [G::Scalar; n] = [G::Scalar::ONE; n];

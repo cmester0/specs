@@ -4,7 +4,7 @@ From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
 From mathcomp Require Import word_ssrZ word.
-From Jasmin Require Import word.
+(* From Jasmin Require Import word. *)
 
 From Coq Require Import ZArith.
 From Coq Require Import Strings.String.
@@ -24,36 +24,46 @@ Import choice.Choice.Exports.
 
 Obligation Tactic := (* try timeout 8 *) solve_ssprove_obligations.
 
-Require Import Hacspec_ovn_Ovn_traits.
-Export Hacspec_ovn_Ovn_traits.
+Require Import Crate_Ovn_traits.
+Export Crate_Ovn_traits.
 
 Definition t_g_z_89_ : choice_type :=
-  'unit.
-Equations Build_t_g_z_89_ : both (fset []) (fset []) (t_g_z_89_) :=
-  Build_t_g_z_89_  :=
-    solve_lift (ret_both (tt (* Empty tuple *) : (t_g_z_89_))) : both (fset []) (fset []) (t_g_z_89_).
+  (int8).
+Equations f_val {L : {fset Location}} {I : Interface} (s : both L I t_g_z_89_) : both L I int8 :=
+  f_val s  :=
+    bind_both s (fun x =>
+      solve_lift (ret_both (x : int8))) : both L I int8.
 Fail Next Obligation.
+Equations Build_t_g_z_89_ {L0 : {fset Location}} {I0 : Interface} {f_val : both L0 I0 int8} : both L0 I0 (t_g_z_89_) :=
+  Build_t_g_z_89_  :=
+    bind_both f_val (fun f_val =>
+      solve_lift (ret_both ((f_val) : (t_g_z_89_)))) : both L0 I0 (t_g_z_89_).
+Fail Next Obligation.
+Notation "'Build_t_g_z_89_' '[' x ']' '(' 'f_val' ':=' y ')'" := (Build_t_g_z_89_ (f_val := y)).
 
 Definition t_z_89_ : choice_type :=
-  'unit.
-Equations Build_t_z_89_ : both (fset []) (fset []) (t_z_89_) :=
-  Build_t_z_89_  :=
-    solve_lift (ret_both (tt (* Empty tuple *) : (t_z_89_))) : both (fset []) (fset []) (t_z_89_).
+  (int8).
+Equations f_val {L : {fset Location}} {I : Interface} (s : both L I t_z_89_) : both L I int8 :=
+  f_val s  :=
+    bind_both s (fun x =>
+      solve_lift (ret_both (x : int8))) : both L I int8.
 Fail Next Obligation.
+Equations Build_t_z_89_ {L0 : {fset Location}} {I0 : Interface} {f_val : both L0 I0 int8} : both L0 I0 (t_z_89_) :=
+  Build_t_z_89_  :=
+    bind_both f_val (fun f_val =>
+      solve_lift (ret_both ((f_val) : (t_z_89_)))) : both L0 I0 (t_z_89_).
+Fail Next Obligation.
+Notation "'Build_t_z_89_' '[' x ']' '(' 'f_val' ':=' y ')'" := (Build_t_z_89_ (f_val := y)).
 
-#[global] Program Instance t_z_89__t_Z_Field : t_Z_Field t_z_89_ := _.
-Next Obligation.
-  refine (
-  let f_field_type := int32 : choice_type in
-  let f_q := fun  {L : {fset Location}} {I : Interface} => solve_lift (ret_both (89 : int32)) : both (L :|: fset []) I int32 in
-  let f_random_field_elem := fun  {L1 : {fset Location}} {I1 : Interface} (random : both L1 I1 int32) => solve_lift (random .% ((f_q ) .- (ret_both (1 : int32)))) : both (L1 :|: fset []) I1 int32 in
-  let f_field_zero := fun  {L : {fset Location}} {I : Interface} => solve_lift (ret_both (0 : int32)) : both (L :|: fset []) I int32 in
-  let f_field_one := fun  {L : {fset Location}} {I : Interface} => solve_lift (ret_both (1 : int32)) : both (L :|: fset []) I int32 in
-  let f_add := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 int32) (y : both L2 I2 int32) => solve_lift ((x .+ y) .% ((f_q ) .- (ret_both (1 : int32)))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) int32 in
-  let f_sub := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 int32) (y : both L2 I2 int32) => solve_lift (((x .+ ((f_q ) .- (ret_both (1 : int32)))) .- y) .% ((f_q ) .- (ret_both (1 : int32)))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) int32 in
-  let f_mul := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 int32) (y : both L2 I2 int32) => solve_lift ((x .* y) .% ((f_q ) .- (ret_both (1 : int32)))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) int32 in
-  {| f_field_type := (@f_field_type);
-  f_q_loc := (fset [] : {fset Location});
+#[global] Program Instance t_z_89__t_Field : t_Field t_z_89_ :=
+  let f_q := fun  {L : {fset Location}} {I : Interface} => solve_lift (Build_t_C_z_89_ (f_val := ret_both (89 : int8))) : both (L :|: fset []) I t_z_89_ in
+  let f_random_field_elem := fun  {L1 : {fset Location}} {I1 : Interface} (random : both L1 I1 int32) => solve_lift (Build_t_C_z_89_ (f_val := (cast_int (WS2 := _) random) .% ((f_val (f_q (ret_both (tt : 'unit)))) .- (ret_both (1 : int8))))) : both (L1 :|: fset []) I1 t_z_89_ in
+  let f_field_zero := fun  {L : {fset Location}} {I : Interface} => solve_lift (Build_t_C_z_89_ (f_val := ret_both (0 : int8))) : both (L :|: fset []) I t_z_89_ in
+  let f_field_one := fun  {L : {fset Location}} {I : Interface} => solve_lift (Build_t_C_z_89_ (f_val := ret_both (1 : int8))) : both (L :|: fset []) I t_z_89_ in
+  let f_add := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_z_89_) (y : both L2 I2 t_z_89_) => solve_lift (Build_t_C_z_89_ (f_val := ((f_val x) .+ (f_val y)) .% ((f_val (f_q (ret_both (tt : 'unit)))) .- (ret_both (1 : int8))))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_z_89_ in
+  let f_sub := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_z_89_) (y : both L2 I2 t_z_89_) => solve_lift (Build_t_C_z_89_ (f_val := (((f_val x) .+ ((f_val (f_q (ret_both (tt : 'unit)))) .- (ret_both (1 : int8)))) .- (f_val y)) .% ((f_val (f_q (ret_both (tt : 'unit)))) .- (ret_both (1 : int8))))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_z_89_ in
+  let f_mul := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_z_89_) (y : both L2 I2 t_z_89_) => solve_lift (Build_t_C_z_89_ (f_val := cast_int (WS2 := _) (((cast_int (WS2 := _) (f_val x)) .* (cast_int (WS2 := _) (f_val y))) .% (cast_int (WS2 := _) ((f_val (f_q (ret_both (tt : 'unit)))) .- (ret_both (1 : int8))))))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_z_89_ in
+  {| f_q_loc := (fset [] : {fset Location});
   f_q := (@f_q);
   f_random_field_elem_loc := (fset [] : {fset Location});
   f_random_field_elem := (@f_random_field_elem);
@@ -66,60 +76,45 @@ Next Obligation.
   f_sub_loc := (fset [] : {fset Location});
   f_sub := (@f_sub);
   f_mul_loc := (fset [] : {fset Location});
-    f_mul := (@f_mul)|}
-    ).
-  easy.
-  easy.
-  easy.
-  easy.
-  easy.
-  exact int_eqdec.
-  easy.
-  easy.
-  Unshelve.
-  all: try normalize_fset.
-  all: try solve_single_fset_fsubset.
-  
-  unfold f_parameter_cursor_loc.
-  
-Next Obligation.
-  unfold t_z_89__t_Z_Field_obligation_4.
+  f_mul := (@f_mul)|}.
 Fail Next Obligation.
-Hint Unfold t_z_89__t_Z_Field.
+Hint Unfold t_z_89__t_Field.
 
 Definition res_loc : Location :=
-  (int32;0%nat).
+  (t_z_89_;12%nat).
 Definition result_loc : Location :=
-  (int32;1%nat).
-#[global] Program Instance t_g_z_89__t_Group : t_Group t_g_z_89_ t_z_89_ :=
-  let f_group_type := int32 : choice_type in
-  let f_g := fun  {L : {fset Location}} {I : Interface} => solve_lift (ret_both (3 : int32)) : both (L :|: fset []) I int32 in
-  let f_hash := fun  {L1 : {fset Location}} {I1 : Interface} (x : both L1 I1 (t_Vec int32 t_Global)) => letb res loc(res_loc) := f_field_one (ret_both (tt : 'unit)) in
+  (t_g_z_89_;13%nat).
+#[global] Program Instance t_g_z_89__t_Group : t_Group t_g_z_89_ :=
+  let f_Z := t_z_89_ : choice_type in
+  let f_g := fun  {L : {fset Location}} {I : Interface} => solve_lift (Build_t_C_g_z_89_ (f_val := ret_both (3 : int8))) : both (L :|: fset []) I t_g_z_89_ in
+  let f_hash := fun  {L1 : {fset Location}} {I1 : Interface} (x : both L1 I1 (t_Vec t_g_z_89_ t_Global)) => letb res loc(res_loc) := f_field_one (ret_both (tt : 'unit)) in
   letb _ := foldi_both_list (f_into_iter x) (fun y =>
     ssp (fun _ =>
       assign todo(term) : (both (*1*)(L1:|:fset [res_loc]) (I1) 'unit))) (ret_both (tt : 'unit)) in
-  solve_lift res : both (L1 :|: fset [res_loc]) I1 int32 in
-  let f_g_pow := fun  {L1 : {fset Location}} {I1 : Interface} (x : both L1 I1 int32) => solve_lift (f_pow (f_g (ret_both (tt : 'unit))) x) : both (L1 :|: fset []) I1 int32 in
-  let f_pow := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (g : both L1 I1 int32) (x : both L2 I2 int32) => letb result loc(result_loc) := f_group_one (ret_both (tt : 'unit)) in
-  letb _ := foldi_both_list (f_into_iter (Build_t_Range (f_start := ret_both (0 : int32)) (f_end := x .% ((f_q (ret_both (tt : 'unit))) .- (ret_both (1 : int32)))))) (fun i =>
+  solve_lift res : both (L1 :|: fset [res_loc]) I1 t_z_89_ in
+  let f_g_pow := fun  {L1 : {fset Location}} {I1 : Interface} (x : both L1 I1 t_z_89_) => solve_lift (f_pow (f_g (ret_both (tt : 'unit))) x) : both (L1 :|: fset []) I1 t_g_z_89_ in
+  let f_pow := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (g : both L1 I1 t_g_z_89_) (x : both L2 I2 t_z_89_) => letb result loc(result_loc) := f_group_one (ret_both (tt : 'unit)) in
+  letb _ := foldi_both_list (f_into_iter (Build_t_Range (f_start := ret_both (0 : int8)) (f_end := (f_val x) .% ((f_val (f_q (ret_both (tt : 'unit)))) .- (ret_both (1 : int8)))))) (fun _ =>
     ssp (fun _ =>
       assign todo(term) : (both (*1*)(L1:|:L2:|:fset [result_loc]) (I1:|:I2) 'unit))) (ret_both (tt : 'unit)) in
-  solve_lift result : both (L1 :|: L2 :|: fset [result_loc]) (I1 :|: I2) int32 in
-  let f_group_one := fun  {L : {fset Location}} {I : Interface} => solve_lift (ret_both (1 : int32)) : both (L :|: fset []) I int32 in
-  let f_prod := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 int32) (y : both L2 I2 int32) => solve_lift (((x .% (f_q (ret_both (tt : 'unit)))) .* (y .% (f_q (ret_both (tt : 'unit))))) .% (f_q (ret_both (tt : 'unit)))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) int32 in
-  let f_inv := fun  {L1 : {fset Location}} {I1 : Interface} (x : both L1 I1 int32) => solve_lift (run (letb _ := foldi_both_list (f_into_iter (Build_t_Range (f_start := ret_both (0 : int32)) (f_end := ret_both (89 : int32)))) (fun j =>
+  solve_lift result : both (L1 :|: L2 :|: fset [result_loc]) (I1 :|: I2) t_g_z_89_ in
+  let f_group_one := fun  {L : {fset Location}} {I : Interface} => solve_lift (Build_t_C_g_z_89_ (f_val := ret_both (1 : int8))) : both (L :|: fset []) I t_g_z_89_ in
+  let f_prod := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_g_z_89_) (y : both L2 I2 t_g_z_89_) => letb q_val := f_val (f_q (ret_both (tt : 'unit))) in
+  solve_lift (Build_t_C_g_z_89_ (f_val := cast_int (WS2 := _) (((cast_int (WS2 := _) ((f_val x) .% q_val)) .* (cast_int (WS2 := _) ((f_val y) .% q_val))) .% (cast_int (WS2 := _) q_val)))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_g_z_89_ in
+  let f_inv := fun  {L1 : {fset Location}} {I1 : Interface} (x : both L1 I1 t_g_z_89_) => solve_lift (run (letb _ := foldi_both_list (f_into_iter (Build_t_Range (f_start := ret_both (0 : int8)) (f_end := ret_both (89 : int8)))) (fun j =>
     ssp (fun _ =>
-      solve_lift (ifb (f_prod x j) =.? (f_group_one (ret_both (tt : 'unit)))
-      then letm[choice_typeMonad.result_bind_code int32] hoist1 := v_Break j in
-      ControlFlow_Continue (never_to_any hoist1)
-      else ()) : (both (*0*)(L1:|:fset []) (I1) (t_ControlFlow int32 'unit)))) (ret_both (tt : 'unit)) in
+      letb value := Build_t_C_g_z_89_ (f_val := j) in
+      solve_lift (ifb (f_prod x value) =.? (f_group_one (ret_both (tt : 'unit)))
+      then letm[choice_typeMonad.result_bind_code t_g_z_89_] hoist29 := v_Break value in
+      ControlFlow_Continue (never_to_any hoist29)
+      else ()) : (both (*0*)(L1:|:fset []) (I1) (t_ControlFlow t_g_z_89_ 'unit)))) (ret_both (tt : 'unit)) in
   letb _ := ifb not (ret_both (false : 'bool))
   then never_to_any (panic (ret_both (assertion failed: false : chString)))
   else () in
-  letm[choice_typeMonad.result_bind_code int32] hoist2 := v_Break x in
-  ControlFlow_Continue (never_to_any hoist2))) : both (L1 :|: fset []) I1 int32 in
-  let f_div := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 int32) (y : both L2 I2 int32) => solve_lift (f_prod x (f_inv y)) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) int32 in
-  {| f_group_type := (@f_group_type);
+  letm[choice_typeMonad.result_bind_code t_g_z_89_] hoist30 := v_Break x in
+  ControlFlow_Continue (never_to_any hoist30))) : both (L1 :|: fset []) I1 t_g_z_89_ in
+  let f_div := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_g_z_89_) (y : both L2 I2 t_g_z_89_) => solve_lift (f_prod x (f_inv y)) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_g_z_89_ in
+  {| f_Z := (@f_Z);
   f_g_loc := (fset [] : {fset Location});
   f_g := (@f_g);
   f_hash_loc := (fset [res_loc] : {fset Location});
