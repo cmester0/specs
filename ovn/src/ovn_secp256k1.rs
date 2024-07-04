@@ -30,7 +30,7 @@ use hacspec_bip_340::*;
 
 #[derive(core::marker::Copy, Clone, PartialEq, Eq)]
 pub struct Z_curve {
-    val: Scalar,
+    z_val: Scalar,
 }
 
 impl hacspec_concordium::Deserial for Z_curve {
@@ -38,7 +38,7 @@ impl hacspec_concordium::Deserial for Z_curve {
         let temp : Vec<u8> = source.get()?;
 
         Ok(Z_curve {
-            val: Scalar::from_public_byte_seq_be(Seq::<u8>::from_vec(temp)),
+            z_val: Scalar::from_public_byte_seq_be(Seq::<u8>::from_vec(temp)),
         })
     }
 }
@@ -46,7 +46,7 @@ impl hacspec_concordium::Deserial for Z_curve {
 impl hacspec_concordium::Serial for Z_curve {
     fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
         let mut v : Vec<u8> = Vec::new();
-        for x in self.val.to_public_byte_seq_be().native_slice() {
+        for x in self.z_val.to_public_byte_seq_be().native_slice() {
             v.push(x.clone());
         }
         v.serial(out)
@@ -56,7 +56,7 @@ impl hacspec_concordium::Serial for Z_curve {
 impl Field for Z_curve {
     fn q() -> Self {
         Z_curve {
-            val: Scalar::from_hex(
+            z_val: Scalar::from_hex(
                 "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
             ),
         }
@@ -64,38 +64,48 @@ impl Field for Z_curve {
 
     fn random_field_elem(random: u32) -> Self {
         Z_curve {
-            val: Scalar::from_literal(random as u128),
+            z_val: Scalar::from_literal(random as u128),
         }
     }
 
     fn field_zero() -> Self {
         Z_curve {
-            val: Scalar::from_literal(0u128),
+            z_val: Scalar::from_literal(0u128),
         } // Scalar::ZERO()
     }
 
     fn field_one() -> Self {
         Z_curve {
-            val: Scalar::from_literal(1u128),
+            z_val: Scalar::from_literal(1u128),
         } // Scalar::ONE()
     }
 
     fn add(x: Self, y: Self) -> Self {
-        Z_curve { val: x.val + y.val }
+        Z_curve { z_val: x.z_val + y.z_val }
     }
 
-    fn sub(x: Self, y: Self) -> Self {
-        Z_curve { val: x.val - y.val }
+    fn opp(x: Self) -> Self {
+        Z_curve { z_val: Self::field_zero().z_val - x.z_val }
     }
+
+    // fn sub(x: Self, y: Self) -> Self {
+    //     Z_curve { z_val: x.z_val - y.z_val }
+    // }
 
     fn mul(x: Self, y: Self) -> Self {
-        Z_curve { val: x.val * y.val }
+        Z_curve { z_val: x.z_val * y.z_val }
     }
+
+    fn inv(x: Self) -> Self {
+        assert!(false); // Missing
+        return x;
+    }
+
 }
 
 #[derive(core::marker::Copy, Clone, PartialEq, Eq)]
 pub struct Group_curve {
-    val: Point,
+    g_val: Point,
 }
 
 impl hacspec_concordium::Deserial for Group_curve {
@@ -106,20 +116,20 @@ impl hacspec_concordium::Deserial for Group_curve {
             let vy : Vec<u8> = source.get()?;
 
             Ok(Group_curve {
-                val: Point::Affine((
+                g_val: Point::Affine((
                     FieldElement::from_public_byte_seq_be(Seq::<u8>::from_vec(vx)),
                     FieldElement::from_public_byte_seq_be(Seq::<u8>::from_vec(vy)),
                 )),
             })
         } else {
-            Ok(Group_curve { val: Point::AtInfinity })
+            Ok(Group_curve { g_val: Point::AtInfinity })
         }
     }
 }
 
 impl hacspec_concordium::Serial for Group_curve {
     fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
-        match self.val {
+        match self.g_val {
             Point::Affine(p) => {
                 true.serial(out)?;
 
@@ -163,7 +173,7 @@ impl Group for Group_curve {
             0x9Cu8, 0x47u8, 0xD0u8, 0x8Fu8, 0xFBu8, 0x10u8, 0xD4u8, 0xB8u8
         ]);
         Group_curve {
-            val: Point::Affine((
+            g_val: Point::Affine((
                 FieldElement::from_public_byte_seq_be(gx),
                 FieldElement::from_public_byte_seq_be(gy),
             )),
@@ -172,13 +182,13 @@ impl Group for Group_curve {
 
     fn pow(g: Self, x: Z_curve) -> Self {
         Group_curve {
-            val: point_mul(x.val, g.val),
+            g_val: point_mul(x.z_val, g.g_val),
         }
     }
 
     fn g_pow(x: Z_curve) -> Self {
         Group_curve {
-            val: point_mul_base(x.val),
+            g_val: point_mul_base(x.z_val),
         }
         // Self::pow(Self::g(), x)
     }
@@ -189,22 +199,22 @@ impl Group for Group_curve {
 
     fn prod(x: Self, y: Self) -> Self {
         Group_curve {
-            val: point_add(x.val, y.val),
+            g_val: point_add(x.g_val, y.g_val),
         }
     }
 
-    fn inv(x: Self) -> Self {
+    fn group_inv(x: Self) -> Self {
         Group_curve {
-            val: match x.val {
+            g_val: match x.g_val {
                 Point::Affine((a, b)) => Point::Affine((a, FieldElement::from_literal(0u128) - b)),
                 Point::AtInfinity => Point::AtInfinity,
             },
         }
     }
 
-    fn div(x: Self, y: Self) -> Self {
-        Self::prod(x, Self::inv(y))
-    }
+    // fn div(x: Self, y: Self) -> Self {
+    //     Self::prod(x, Self::inv(y))
+    // }
 
     fn hash(x: Vec<Self>) -> Z_curve {
         // fp_hash_to_field

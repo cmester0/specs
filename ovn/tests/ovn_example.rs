@@ -28,13 +28,15 @@ pub use hacspec_ovn::ovn_z_89::*;
 
 #[cfg(test)]
 pub fn schnorr_zkp_correctness<G: Group>(random_x: u32, random_r: u32) -> bool {
-        let x: G::Z = G::Z::random_field_elem(random_x);
-        let pow_x = G::g_pow(x);
+    let x: G::Z = G::Z::random_field_elem(random_x);
+    let r: G::Z = G::Z::random_field_elem(random_r);
 
-        let pi: SchnorrZKPCommit<G> = schnorr_zkp(random_r, pow_x, x);
+    let pow_x = G::g_pow(x);
 
-        let valid = schnorr_zkp_validate::<G>(pow_x, pi);
-        valid
+    let pi: SchnorrZKPCommit<G> = schnorr_zkp(r, pow_x, x);
+
+    let valid = schnorr_zkp_validate::<G>(pow_x, pi);
+    valid
 }
 
 pub fn schnorr_zkp_z_89_correctness() {
@@ -59,9 +61,15 @@ pub fn or_zkp_correctness<G: Group>(
     random_x: u32,
     v: bool,
 ) -> bool {
-    let mut h = G::g_pow(G::Z::random_field_elem(random_h));
+    let w = G::Z::random_field_elem(random_w);
+    let r = G::Z::random_field_elem(random_r);
+    let d = G::Z::random_field_elem(random_d);
+    let h = G::Z::random_field_elem(random_h);
     let x = G::Z::random_field_elem(random_x);
-    let pi: OrZKPCommit<G> = zkp_one_out_of_two(random_w, random_r, random_d, h, x, v);
+
+    let mut h = G::g_pow(h);
+    let x = x;
+    let pi: OrZKPCommit<G> = zkp_one_out_of_two(w, r, d, h, x, v);
     let valid = zkp_one_out_of_two_validate::<G>(h, pi);
     valid
 }
@@ -158,13 +166,13 @@ pub fn test_params_of_group_secp256k1() {
 pub fn test_correctness<G: Group, const n: usize, A: HasActions>(
     votes: [bool; n],
     xis: [G::Z; n],
-    rp_zkp_randoms: [u32; n],
-    cvp_zkp_random_ws1: [u32; n],
-    cvp_zkp_random_rs1: [u32; n],
-    cvp_zkp_random_ds1: [u32; n],
-    cvp_zkp_random_ws2: [u32; n],
-    cvp_zkp_random_rs2: [u32; n],
-    cvp_zkp_random_ds2: [u32; n],
+    rp_zkp_randoms: [G::Z; n],
+    cvp_zkp_random_ws1: [G::Z; n],
+    cvp_zkp_random_rs1: [G::Z; n],
+    cvp_zkp_random_ds1: [G::Z; n],
+    cvp_zkp_random_ws2: [G::Z; n],
+    cvp_zkp_random_rs2: [G::Z; n],
+    cvp_zkp_random_ds2: [G::Z; n],
 ) -> bool {
     // Setup the context
     let mut ctx = hacspec_concordium::test_infrastructure::ReceiveContextTest::empty();
@@ -234,25 +242,25 @@ fn randomized_full_test<G: Group, const n: usize>() -> bool {
     use rand::random;
     let mut votes: [bool; n] = [false; n];
     let mut xis: [G::Z; n] = [G::Z::field_zero(); n];
-    let mut rp_zkp_randoms: [u32; n] = [0; n];
-    let mut cvp_zkp_random_ws1: [u32; n] = [0; n];
-    let mut cvp_zkp_random_rs1: [u32; n] = [0; n];
-    let mut cvp_zkp_random_ds1: [u32; n] = [0; n];
+    let mut rp_zkp_randoms: [G::Z; n] = [G::Z::field_zero(); n];
+    let mut cvp_zkp_random_ws1: [G::Z; n] = [G::Z::field_zero(); n];
+    let mut cvp_zkp_random_rs1: [G::Z; n] = [G::Z::field_zero(); n];
+    let mut cvp_zkp_random_ds1: [G::Z; n] = [G::Z::field_zero(); n];
 
-    let mut cvp_zkp_random_ws2: [u32; n] = [0; n];
-    let mut cvp_zkp_random_rs2: [u32; n] = [0; n];
-    let mut cvp_zkp_random_ds2: [u32; n] = [0; n];
+    let mut cvp_zkp_random_ws2: [G::Z; n] = [G::Z::field_zero(); n];
+    let mut cvp_zkp_random_rs2: [G::Z; n] = [G::Z::field_zero(); n];
+    let mut cvp_zkp_random_ds2: [G::Z; n] = [G::Z::field_zero(); n];
 
     for i in 0..n {
         votes[i] = random();
         xis[i] = G::Z::random_field_elem(random());
-        rp_zkp_randoms[i] = random();
-        cvp_zkp_random_ws1[i] = random();
-        cvp_zkp_random_rs1[i] = random();
-        cvp_zkp_random_ds1[i] = random();
-        cvp_zkp_random_ws2[i] = random();
-        cvp_zkp_random_rs2[i] = random();
-        cvp_zkp_random_ds2[i] = random();
+        rp_zkp_randoms[i] = G::Z::random_field_elem(random());
+        cvp_zkp_random_ws1[i] = G::Z::random_field_elem(random());
+        cvp_zkp_random_rs1[i] = G::Z::random_field_elem(random());
+        cvp_zkp_random_ds1[i] = G::Z::random_field_elem(random());
+        cvp_zkp_random_ws2[i] = G::Z::random_field_elem(random());
+        cvp_zkp_random_rs2[i] = G::Z::random_field_elem(random());
+        cvp_zkp_random_ds2[i] = G::Z::random_field_elem(random());
     }
 
     test_correctness::<G, n, hacspec_concordium::test_infrastructure::ActionsTree>(

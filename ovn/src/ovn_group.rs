@@ -8,6 +8,18 @@ use hacspec_concordium_derive::*;
 
 pub use crate::ovn_traits::*;
 
+////////////////////////
+// Useful definitions //
+////////////////////////
+
+fn sub<Z : Field>(x: Z, y: Z) -> Z {
+    Z::add(x, Z::opp(y))
+}
+
+fn div<G : Group>(x: G, y: G) -> G {
+    G::prod(x, G::group_inv(y))
+}
+
 ////////////////////
 // Implementation //
 ////////////////////
@@ -23,11 +35,11 @@ pub struct SchnorrZKPCommit<G: Group> {
 // https://www.rfc-editor.org/rfc/rfc8235
 // https://crypto.stanford.edu/cs355/19sp/lec5.pdf
 pub fn schnorr_zkp<G: Group>(
-    random: u32,
+    random: G::Z,
     h: G,
     x: G::Z,
 ) -> SchnorrZKPCommit<G> {
-    let r = G::Z::random_field_elem(random);
+    let r = random;
     let u = G::g_pow(r);
     let c = G::hash(vec![G::g(), h, u]);
     let z = G::Z::add(r, G::Z::mul(c, x));
@@ -68,18 +80,18 @@ pub struct OrZKPCommit<G: Group> {
 
 /** Cramer, Damgård and Schoenmakers (CDS) technique */
 pub fn zkp_one_out_of_two<G: Group>(
-    random_w: u32,
-    random_r: u32,
-    random_d: u32,
+    random_w: G::Z,
+    random_r: G::Z,
+    random_d: G::Z,
     h: G,
     xi: G::Z,
     vi: bool,
 ) -> OrZKPCommit<G> {
-    let w = G::Z::random_field_elem(random_w);
+    let w = random_w;
 
     if vi {
-        let r1 = G::Z::random_field_elem(random_r);
-        let d1 = G::Z::random_field_elem(random_d);
+        let r1 = random_r;
+        let d1 = random_d;
 
         let x = G::g_pow(xi);
         let y = G::prod(G::pow(h, xi), G::g());
@@ -92,8 +104,8 @@ pub fn zkp_one_out_of_two<G: Group>(
 
         let c = G::hash(vec![x, y, a1, b1, a2, b2]);
 
-        let d2 = G::Z::sub(c, d1);
-        let r2 = G::Z::sub(w, G::Z::mul(xi, d2));
+        let d2 = sub::<G::Z>(c, d1);
+        let r2 = sub::<G::Z>(w, G::Z::mul(xi, d2));
 
         OrZKPCommit {
             or_zkp_x: x,
@@ -109,8 +121,8 @@ pub fn zkp_one_out_of_two<G: Group>(
             or_zkp_r2: r2,
         }
     } else {
-        let r2 = G::Z::random_field_elem(random_r);
-        let d2 = G::Z::random_field_elem(random_d);
+        let r2 = random_r;
+        let d2 = random_d;
 
         let x = G::g_pow(xi);
         let y = G::pow(h, xi);
@@ -119,12 +131,12 @@ pub fn zkp_one_out_of_two<G: Group>(
         let b1 = G::pow(h, w);
 
         let a2 = G::prod(G::g_pow(r2), G::pow(x, d2));
-        let b2 = G::prod(G::pow(h, r2), G::pow(G::div(y, G::g()), d2));
+        let b2 = G::prod(G::pow(h, r2), G::pow(div::<G>(y, G::g()), d2));
 
         let c = G::hash(vec![x, y, a1, b1, a2, b2]);
 
-        let d1 = G::Z::sub(c, d2);
-        let r1 = G::Z::sub(w, G::Z::mul(xi, d1));
+        let d1 = sub::<G::Z>(c, d2);
+        let r1 = sub::<G::Z>(w, G::Z::mul(xi, d1));
 
         OrZKPCommit {
             or_zkp_x: x,
@@ -167,7 +179,7 @@ pub fn zkp_one_out_of_two_validate<G: Group>(
         && zkp.or_zkp_b2
             == G::prod(
                 G::pow(h, zkp.or_zkp_r2),
-                G::pow(G::div(zkp.or_zkp_y, G::g()), zkp.or_zkp_d2),
+                G::pow(div::<G>(zkp.or_zkp_y, G::g()), zkp.or_zkp_d2),
             ))
 }
 
@@ -237,16 +249,11 @@ pub fn init_ovn_contract<G: Group, const n: usize>(// _: &impl HasInitContext,
    })
 }
 
-/** Currently randomness needs to be injected */
-pub fn select_private_voting_key<Z: Field>(random: u32) -> Z {
-    Z::random_field_elem(random)
-}
-
 #[derive(Serialize, SchemaType)]
 pub struct RegisterParam<Z: Field> {
     pub rp_i: u32,
     pub rp_xi: Z,
-    pub rp_zkp_random: u32,
+    pub rp_zkp_random: Z,
 }
 
 /** Primary function in round 1 */
@@ -273,9 +280,9 @@ pub fn register_vote<G: Group, const n: usize, A: HasActions>(
 pub struct CastVoteParam<Z: Field> {
     pub cvp_i: u32,
     pub cvp_xi: Z,
-    pub cvp_zkp_random_w: u32,
-    pub cvp_zkp_random_r: u32,
-    pub cvp_zkp_random_d: u32,
+    pub cvp_zkp_random_w: Z,
+    pub cvp_zkp_random_r: Z,
+    pub cvp_zkp_random_d: Z,
     pub cvp_vote: bool,
 }
 
@@ -294,7 +301,7 @@ pub fn compute_g_pow_yi<G: Group, const n: usize>(
     }
 
     // implicitly: Y_i = g^y_i
-    let g_pow_yi = G::div(prod1, prod2);
+    let g_pow_yi = div::<G>(prod1, prod2);
     g_pow_yi
 }
 
