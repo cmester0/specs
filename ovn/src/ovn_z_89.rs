@@ -155,7 +155,7 @@ impl Group for g_z_89 {
     fn hash(x: Vec<Self>) -> z_89 {
         let mut res = z_89::field_one();
         for y in x {
-            res = z_89{z_val: y.g_val} * /* field product */ res;
+            res = z_89{z_val: y.g_val} * res;
         }
         res // TODO
     }
@@ -168,7 +168,7 @@ impl Group for g_z_89 {
     fn pow(g: Self, x: z_89) -> Self {
         let mut result = Self::group_one();
         for _ in 0..(x.z_val % (z_89::q().z_val - 1)) {
-            result = result * /* group product */ g;
+            result = result * g;
         }
         result
     }
@@ -180,7 +180,7 @@ impl Group for g_z_89 {
     fn group_inv(x: Self) -> Self {
         for j in 0..89 {
             let g_value = g_z_89 {g_val: j};
-            if x * /* group product */ g_value == Self::group_one() {
+            if x * g_value == Self::group_one() {
                 return g_value;
             }
         }

@@ -13,11 +13,11 @@ pub use crate::ovn_traits::*;
 ////////////////////////
 
 fn sub<Z: Field>(x: Z, y: Z) -> Z {
-    x + /* field addition */ (-/* field opposite */y)
+    x + (-y)
 }
 
 fn div<G: Group>(x: G, y: G) -> G {
-    x * G::group_inv(y) // group product
+    x * G::group_inv(y)
 }
 
 ////////////////////
@@ -38,7 +38,7 @@ pub fn schnorr_zkp<G: Group>(random: G::Z, h: G, x: G::Z) -> SchnorrZKPCommit<G>
     let r = random;
     let u = G::g_pow(r);
     let c = G::hash(vec![G::g(), h, u]);
-    let z = r + /* field addition */ c * /* field product */ x;
+    let z = r + c * x;
 
     return SchnorrZKPCommit {
         schnorr_zkp_u: u,
@@ -51,7 +51,7 @@ pub fn schnorr_zkp<G: Group>(random: G::Z, h: G, x: G::Z) -> SchnorrZKPCommit<G>
 pub fn schnorr_zkp_validate<G: Group>(h: G, pi: SchnorrZKPCommit<G>) -> bool {
     pi.schnorr_zkp_c == G::hash(vec![G::g(), h, pi.schnorr_zkp_u])
         && G::g_pow(pi.schnorr_zkp_z)
-            == pi.schnorr_zkp_u * /* group product */ G::pow(h, pi.schnorr_zkp_c)
+            == pi.schnorr_zkp_u * G::pow(h, pi.schnorr_zkp_c)
 }
 
 #[derive(Serialize, SchemaType, Clone, Copy)]
@@ -88,10 +88,10 @@ pub fn zkp_one_out_of_two<G: Group>(
         let d1 = random_d;
 
         let x = G::g_pow(xi);
-        let y = G::pow(h, xi) * /* group product */ G::g();
+        let y = G::pow(h, xi) * G::g();
 
-        let a1 = G::g_pow(r1) * /* group product */ G::pow(x, d1);
-        let b1 = G::pow(h, r1) * /* group product */ G::pow(y, d1);
+        let a1 = G::g_pow(r1) * G::pow(x, d1);
+        let b1 = G::pow(h, r1) * G::pow(y, d1);
 
         let a2 = G::g_pow(w);
         let b2 = G::pow(h, w);
@@ -99,7 +99,7 @@ pub fn zkp_one_out_of_two<G: Group>(
         let c = G::hash(vec![x, y, a1, b1, a2, b2]);
 
         let d2 = sub::<G::Z>(c, d1);
-        let r2 = sub::<G::Z>(w, xi * /* field product */ d2);
+        let r2 = sub::<G::Z>(w, xi * d2);
 
         OrZKPCommit {
             or_zkp_x: x,
@@ -124,13 +124,13 @@ pub fn zkp_one_out_of_two<G: Group>(
         let a1 = G::g_pow(w);
         let b1 = G::pow(h, w);
 
-        let a2 = G::g_pow(r2) * /* group product */ G::pow(x, d2);
-        let b2 = G::pow(h, r2) * /* group product */ G::pow(div::<G>(y, G::g()), d2);
+        let a2 = G::g_pow(r2) * G::pow(x, d2);
+        let b2 = G::pow(h, r2) * G::pow(div::<G>(y, G::g()), d2);
 
         let c = G::hash(vec![x, y, a1, b1, a2, b2]);
 
         let d1 = sub::<G::Z>(c, d2);
-        let r1 = sub::<G::Z>(w, xi * /* field product */ d1);
+        let r1 = sub::<G::Z>(w, xi * d1);
 
         OrZKPCommit {
             or_zkp_x: x,
@@ -159,16 +159,16 @@ pub fn zkp_one_out_of_two_validate<G: Group>(h: G, zkp: OrZKPCommit<G>) -> bool 
         zkp.or_zkp_b2,
     ]); // TODO: add i
 
-    (c == zkp.or_zkp_d1 + /* field addition */ zkp.or_zkp_d2
+    (c == zkp.or_zkp_d1 + zkp.or_zkp_d2
         && zkp.or_zkp_a1
-            == G::g_pow(zkp.or_zkp_r1) * /* group product */ G::pow(zkp.or_zkp_x, zkp.or_zkp_d1)
+            == G::g_pow(zkp.or_zkp_r1) * G::pow(zkp.or_zkp_x, zkp.or_zkp_d1)
         && zkp.or_zkp_b1
-            == G::pow(h, zkp.or_zkp_r1) * /* group product */
+            == G::pow(h, zkp.or_zkp_r1) *
                 G::pow(zkp.or_zkp_y, zkp.or_zkp_d1)
         && zkp.or_zkp_a2
-            == G::g_pow(zkp.or_zkp_r2) * /* group product */ G::pow(zkp.or_zkp_x, zkp.or_zkp_d2)
+            == G::g_pow(zkp.or_zkp_r2) * G::pow(zkp.or_zkp_x, zkp.or_zkp_d2)
         && zkp.or_zkp_b2
-            == G::pow(h, zkp.or_zkp_r2) * /* group product */ G::pow(div::<G>(zkp.or_zkp_y, G::g()), zkp.or_zkp_d2))
+            == G::pow(h, zkp.or_zkp_r2) * G::pow(div::<G>(zkp.or_zkp_y, G::g()), zkp.or_zkp_d2))
 }
 
 pub fn commit_to<G: Group>(g_pow_xi_yi_vi: G) -> G::Z {
@@ -288,7 +288,7 @@ pub fn compute_g_pow_yi<G: Group, const n: usize>(i: usize, xis: [G; n]) -> G {
 }
 
 pub fn compute_group_element_for_vote<G: Group>(xi: G::Z, vote: bool, g_pow_yi: G) -> G {
-    G::pow(g_pow_yi, xi) * /* group product */
+    G::pow(g_pow_yi, xi) *
         G::g_pow(if vote {
             G::Z::field_one()
         } else {
@@ -371,7 +371,7 @@ pub fn tally_votes<G: Group, const n: usize, A: HasActions>(
 
     let mut vote_result = G::group_one();
     for g_pow_vote in state.g_pow_xi_yi_vis {
-        vote_result = vote_result * /* group product */ g_pow_vote;
+        vote_result = vote_result * g_pow_vote;
     }
 
     // let tally = (0..(n as u32)).rposition(|i| G::g_pow(i) == vote_result).unwrap() as u32;
@@ -383,7 +383,7 @@ pub fn tally_votes<G: Group, const n: usize, A: HasActions>(
             tally = i;
         }
 
-        curr = curr + /* field addition */ G::Z::field_one();
+        curr = curr + G::Z::field_one();
     }
 
     let mut tally_votes_state_ret = state.clone();
