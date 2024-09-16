@@ -35,227 +35,252 @@ Export Hacspec_bip_340.
 
 Definition t_Group_curve : choice_type :=
   (t_Point).
-Equations f_val {L : {fset Location}} {I : Interface} (s : both L I t_Group_curve) : both L I t_Point :=
-  f_val s  :=
+Equations f_g_val (s : both t_Group_curve) : both t_Point :=
+  f_g_val s  :=
     bind_both s (fun x =>
-      solve_lift (ret_both (x : t_Point))) : both L I t_Point.
+      ret_both (x : t_Point)) : both t_Point.
 Fail Next Obligation.
-Equations Build_t_Group_curve {L0 : {fset Location}} {I0 : Interface} {f_val : both L0 I0 t_Point} : both L0 I0 (t_Group_curve) :=
+Equations Build_t_Group_curve {f_g_val : both t_Point} : both (t_Group_curve) :=
   Build_t_Group_curve  :=
-    bind_both f_val (fun f_val =>
-      solve_lift (ret_both ((f_val) : (t_Group_curve)))) : both L0 I0 (t_Group_curve).
+    bind_both f_g_val (fun f_g_val =>
+      ret_both ((f_g_val) : (t_Group_curve))) : both (t_Group_curve).
 Fail Next Obligation.
-Notation "'Build_t_Group_curve' '[' x ']' '(' 'f_val' ':=' y ')'" := (Build_t_Group_curve (f_val := y)).
+Notation "'Build_t_Group_curve' '[' x ']' '(' 'f_g_val' ':=' y ')'" := (Build_t_Group_curve (f_g_val := y)).
 
 #[global] Program Instance t_Group_curve_t_Deserial : t_Deserial t_Group_curve :=
-  let f_deserial := fun  {L1 : {fset Location}} {I1 : Interface} (source : both L1 I1 v_R) => solve_lift (run (letb '(tmp0,out) := f_get source in
-  letb _ := assign todo(term) in
+  let f_deserial := fun  (source : both v_R) => run (letb '(tmp0,out) := f_get source in
+  letb source := tmp0 in
   letb hoist3 := out in
   letb hoist4 := f_branch hoist3 in
   letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] (b : 'bool) := matchb hoist4 with
   | ControlFlow_Break_case residual =>
     letb residual := ret_both ((residual) : (t_Result t_Infallible t_ParseError)) in
-    letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] hoist2 := v_Break (prod_b (source,f_from_residual residual)) in
-    ControlFlow_Continue (solve_lift (never_to_any hoist2))
+    letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] hoist2 := ControlFlow_Break (prod_b (source,f_from_residual residual)) in
+    ControlFlow_Continue (never_to_any hoist2)
   | ControlFlow_Continue_case val =>
     letb val := ret_both ((val) : ('bool)) in
-    ControlFlow_Continue (solve_lift val)
+    ControlFlow_Continue val
   end in
-  letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] hax_temp_output := ifb b
+  letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] '(source,hax_temp_output) := ifb b
   then letb '(tmp0,out) := f_get source in
-  letb _ := assign todo(term) in
+  letb source := tmp0 in
   letb hoist6 := out in
   letb hoist7 := f_branch hoist6 in
   letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] (vx : t_Vec int8 t_Global) := matchb hoist7 with
   | ControlFlow_Break_case residual =>
     letb residual := ret_both ((residual) : (t_Result t_Infallible t_ParseError)) in
-    letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] hoist5 := v_Break (prod_b (source,f_from_residual residual)) in
-    ControlFlow_Continue (solve_lift (never_to_any hoist5))
+    letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] hoist5 := ControlFlow_Break (prod_b (source,f_from_residual residual)) in
+    ControlFlow_Continue (never_to_any hoist5)
   | ControlFlow_Continue_case val =>
     letb val := ret_both ((val) : (t_Vec int8 t_Global)) in
-    ControlFlow_Continue (solve_lift val)
+    ControlFlow_Continue val
   end in
   letb '(tmp0,out) := f_get source in
-  letb _ := assign todo(term) in
+  letb source := tmp0 in
   letb hoist9 := out in
   letb hoist10 := f_branch hoist9 in
   letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] (vy : t_Vec int8 t_Global) := matchb hoist10 with
   | ControlFlow_Break_case residual =>
     letb residual := ret_both ((residual) : (t_Result t_Infallible t_ParseError)) in
-    letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] hoist8 := v_Break (prod_b (source,f_from_residual residual)) in
-    ControlFlow_Continue (solve_lift (never_to_any hoist8))
+    letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Group_curve t_ParseError)] hoist8 := ControlFlow_Break (prod_b (source,f_from_residual residual)) in
+    ControlFlow_Continue (never_to_any hoist8)
   | ControlFlow_Continue_case val =>
     letb val := ret_both ((val) : (t_Vec int8 t_Global)) in
-    ControlFlow_Continue (solve_lift val)
+    ControlFlow_Continue val
   end in
-  ControlFlow_Continue (Result_Ok (Build_t_Group_curve (f_val := Point_Affine (prod_b (impl__FieldElement__from_public_byte_seq_be (impl_52__from_vec vx),impl__FieldElement__from_public_byte_seq_be (impl_52__from_vec vy))))))
-  else ControlFlow_Continue (Result_Ok (Build_t_Group_curve (f_val := Point_AtInfinity))) in
-  ControlFlow_Continue (prod_b (source,hax_temp_output)))) : both (L1 :|: fset []) I1 (v_R × t_Result t_Group_curve t_ParseError) in
-  {| f_deserial_loc := (fset [] : {fset Location});
-  f_deserial := (@f_deserial)|}.
+  ControlFlow_Continue (prod_b (source,Result_Ok (Build_t_Group_curve (f_g_val := Point_Affine (prod_b (impl__FieldElement__from_public_byte_seq_be (impl_52__from_vec vx),impl__FieldElement__from_public_byte_seq_be (impl_52__from_vec vy)))))))
+  else ControlFlow_Continue (prod_b (source,Result_Ok (Build_t_Group_curve (f_g_val := Point_AtInfinity)))) in
+  ControlFlow_Continue (prod_b (source,hax_temp_output))) : both (v_R × t_Result t_Group_curve t_ParseError) in
+  {| f_deserial := (@f_deserial)|}.
 Fail Next Obligation.
 Hint Unfold t_Group_curve_t_Deserial.
 
-Definition v_loc : Location :=
-  (t_Vec int8 t_Global;4%nat).
 #[global] Program Instance t_Group_curve_t_Serial : t_Serial t_Group_curve :=
-  let f_serial := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (self : both L1 I1 t_Group_curve) (out : both L2 I2 v_W) => solve_lift (run (letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] _ := matchb f_val self with
+  let f_serial := fun  (self : both t_Group_curve) (out : both v_W) => run (letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] out := matchb f_g_val self with
   | Point_Affine_case p =>
     letb p := ret_both ((p) : (t_FieldElement × t_FieldElement)) in
-    letb '(tmp0,out) := f_serial (ret_both (true : 'bool)) out in
-    letb _ := assign todo(term) in
-    letb hoist12 := out in
+    letb '(tmp0,out1) := f_serial (ret_both (true : 'bool)) out in
+    letb out := tmp0 in
+    letb hoist12 := out1 in
     letb hoist13 := f_branch hoist12 in
     letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] _ := matchb hoist13 with
     | ControlFlow_Break_case residual =>
       letb residual := ret_both ((residual) : (t_Result t_Infallible f_Err)) in
-      letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] hoist11 := v_Break (prod_b (out,f_from_residual residual)) in
-      ControlFlow_Continue (solve_lift (never_to_any hoist11))
+      letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] hoist11 := ControlFlow_Break (prod_b (out,f_from_residual residual)) in
+      ControlFlow_Continue (never_to_any hoist11)
     | ControlFlow_Continue_case val =>
       letb val := ret_both ((val) : ('unit)) in
-      ControlFlow_Continue (solve_lift val)
+      ControlFlow_Continue val
     end in
-    letb (vx : t_Vec int8 t_Global) loc(vx_loc) := impl__new (ret_both (tt : 'unit)) in
-    letb _ := foldi_both_list (f_into_iter (impl_41__native_slice (impl__FieldElement__to_public_byte_seq_be (x p)))) (fun x =>
-      ssp (fun _ =>
-        assign todo(term) : (both (*1*)(fset [vx_loc]) ((fset [])) 'unit))) (ret_both (tt : 'unit)) in
-    letb '(tmp0,out) := f_serial vx out in
-    letb _ := assign todo(term) in
-    letb hoist15 := out in
+    letb (vx : t_Vec int8 t_Global) := impl__new in
+    letb vx := foldi_both_list (f_into_iter (impl_41__native_slice (impl__FieldElement__to_public_byte_seq_be (x p)))) (fun x =>
+      ssp (fun vx =>
+        impl_1__push vx (f_clone x) : (both (t_Vec int8 t_Global)))) vx in
+    letb '(tmp0,out1) := f_serial vx out in
+    letb out := tmp0 in
+    letb hoist15 := out1 in
     letb hoist16 := f_branch hoist15 in
     letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] _ := matchb hoist16 with
     | ControlFlow_Break_case residual =>
       letb residual := ret_both ((residual) : (t_Result t_Infallible f_Err)) in
-      letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] hoist14 := v_Break (prod_b (out,f_from_residual residual)) in
-      ControlFlow_Continue (solve_lift (never_to_any hoist14))
+      letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] hoist14 := ControlFlow_Break (prod_b (out,f_from_residual residual)) in
+      ControlFlow_Continue (never_to_any hoist14)
     | ControlFlow_Continue_case val =>
       letb val := ret_both ((val) : ('unit)) in
-      ControlFlow_Continue (solve_lift val)
+      ControlFlow_Continue val
     end in
-    letb (vy : t_Vec int8 t_Global) loc(vy_loc) := impl__new (ret_both (tt : 'unit)) in
-    letb _ := foldi_both_list (f_into_iter (impl_41__native_slice (impl__FieldElement__to_public_byte_seq_be (y p)))) (fun y =>
-      ssp (fun _ =>
-        assign todo(term) : (both (*1*)(fset [vy_loc]) ((fset [])) 'unit))) (ret_both (tt : 'unit)) in
-    letb '(tmp0,out) := f_serial vy out in
-    letb _ := assign todo(term) in
-    letb hoist18 := out in
+    letb (vy : t_Vec int8 t_Global) := impl__new in
+    letb vy := foldi_both_list (f_into_iter (impl_41__native_slice (impl__FieldElement__to_public_byte_seq_be (y p)))) (fun y =>
+      ssp (fun vy =>
+        impl_1__push vy (f_clone y) : (both (t_Vec int8 t_Global)))) vy in
+    letb '(tmp0,out1) := f_serial vy out in
+    letb out := tmp0 in
+    letb hoist18 := out1 in
     letb hoist19 := f_branch hoist18 in
     letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] _ := matchb hoist19 with
     | ControlFlow_Break_case residual =>
       letb residual := ret_both ((residual) : (t_Result t_Infallible f_Err)) in
-      letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] hoist17 := v_Break (prod_b (out,f_from_residual residual)) in
-      ControlFlow_Continue (solve_lift (never_to_any hoist17))
+      letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] hoist17 := ControlFlow_Break (prod_b (out,f_from_residual residual)) in
+      ControlFlow_Continue (never_to_any hoist17)
     | ControlFlow_Continue_case val =>
       letb val := ret_both ((val) : ('unit)) in
-      ControlFlow_Continue (solve_lift val)
+      ControlFlow_Continue val
     end in
-    ControlFlow_Continue (solve_lift (ret_both (tt : 'unit)))
+    ControlFlow_Continue out
   | Point_AtInfinity_case  =>
-    letb '(tmp0,out) := f_serial (ret_both (false : 'bool)) out in
-    letb _ := assign todo(term) in
-    letb hoist21 := out in
+    letb '(tmp0,out1) := f_serial (ret_both (false : 'bool)) out in
+    letb out := tmp0 in
+    letb hoist21 := out1 in
     letb hoist22 := f_branch hoist21 in
     letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] _ := matchb hoist22 with
     | ControlFlow_Break_case residual =>
       letb residual := ret_both ((residual) : (t_Result t_Infallible f_Err)) in
-      letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] hoist20 := v_Break (prod_b (out,f_from_residual residual)) in
-      ControlFlow_Continue (solve_lift (never_to_any hoist20))
+      letm[choice_typeMonad.result_bind_code (v_W × t_Result 'unit f_Err)] hoist20 := ControlFlow_Break (prod_b (out,f_from_residual residual)) in
+      ControlFlow_Continue (never_to_any hoist20)
     | ControlFlow_Continue_case val =>
       letb val := ret_both ((val) : ('unit)) in
-      ControlFlow_Continue (solve_lift val)
+      ControlFlow_Continue val
     end in
-    ControlFlow_Continue (solve_lift (ret_both (tt : 'unit)))
+    ControlFlow_Continue out
   end in
   ControlFlow_Continue (letb hax_temp_output := Result_Ok (ret_both (tt : 'unit)) in
-  prod_b (out,hax_temp_output)))) : both (L1 :|: L2 :|: fset [v_loc;vx_loc;vy_loc]) (I1 :|: I2) (v_W × t_Result 'unit f_Err) in
-  {| f_serial_loc := (fset [v_loc;vx_loc;vy_loc] : {fset Location});
-  f_serial := (@f_serial)|}.
+  prod_b (out,hax_temp_output))) : both (v_W × t_Result 'unit f_Err) in
+  {| f_serial := (@f_serial)|}.
 Fail Next Obligation.
 Hint Unfold t_Group_curve_t_Serial.
 
 Definition t_Z_curve : choice_type :=
   (t_Scalar).
-Equations f_val {L : {fset Location}} {I : Interface} (s : both L I t_Z_curve) : both L I t_Scalar :=
-  f_val s  :=
+Equations f_z_val (s : both t_Z_curve) : both t_Scalar :=
+  f_z_val s  :=
     bind_both s (fun x =>
-      solve_lift (ret_both (x : t_Scalar))) : both L I t_Scalar.
+      ret_both (x : t_Scalar)) : both t_Scalar.
 Fail Next Obligation.
-Equations Build_t_Z_curve {L0 : {fset Location}} {I0 : Interface} {f_val : both L0 I0 t_Scalar} : both L0 I0 (t_Z_curve) :=
+Equations Build_t_Z_curve {f_z_val : both t_Scalar} : both (t_Z_curve) :=
   Build_t_Z_curve  :=
-    bind_both f_val (fun f_val =>
-      solve_lift (ret_both ((f_val) : (t_Z_curve)))) : both L0 I0 (t_Z_curve).
+    bind_both f_z_val (fun f_z_val =>
+      ret_both ((f_z_val) : (t_Z_curve))) : both (t_Z_curve).
 Fail Next Obligation.
-Notation "'Build_t_Z_curve' '[' x ']' '(' 'f_val' ':=' y ')'" := (Build_t_Z_curve (f_val := y)).
+Notation "'Build_t_Z_curve' '[' x ']' '(' 'f_z_val' ':=' y ')'" := (Build_t_Z_curve (f_z_val := y)).
 
 #[global] Program Instance t_Z_curve_t_Deserial : t_Deserial t_Z_curve :=
-  let f_deserial := fun  {L1 : {fset Location}} {I1 : Interface} (source : both L1 I1 v_R) => solve_lift (run (letb '(tmp0,out) := f_get source in
-  letb _ := assign todo(term) in
+  let f_deserial := fun  (source : both v_R) => run (letb '(tmp0,out) := f_get source in
+  letb source := tmp0 in
   letb hoist24 := out in
   letb hoist25 := f_branch hoist24 in
   letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Z_curve t_ParseError)] (temp : t_Vec int8 t_Global) := matchb hoist25 with
   | ControlFlow_Break_case residual =>
     letb residual := ret_both ((residual) : (t_Result t_Infallible t_ParseError)) in
-    letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Z_curve t_ParseError)] hoist23 := v_Break (prod_b (source,f_from_residual residual)) in
-    ControlFlow_Continue (solve_lift (never_to_any hoist23))
+    letm[choice_typeMonad.result_bind_code (v_R × t_Result t_Z_curve t_ParseError)] hoist23 := ControlFlow_Break (prod_b (source,f_from_residual residual)) in
+    ControlFlow_Continue (never_to_any hoist23)
   | ControlFlow_Continue_case val =>
     letb val := ret_both ((val) : (t_Vec int8 t_Global)) in
-    ControlFlow_Continue (solve_lift val)
+    ControlFlow_Continue val
   end in
-  ControlFlow_Continue (letb hax_temp_output := Result_Ok (Build_t_Z_curve (f_val := impl__Scalar__from_public_byte_seq_be (impl_52__from_vec temp))) in
-  prod_b (source,hax_temp_output)))) : both (L1 :|: fset []) I1 (v_R × t_Result t_Z_curve t_ParseError) in
-  {| f_deserial_loc := (fset [] : {fset Location});
-  f_deserial := (@f_deserial)|}.
+  ControlFlow_Continue (letb hax_temp_output := Result_Ok (Build_t_Z_curve (f_z_val := impl__Scalar__from_public_byte_seq_be (impl_52__from_vec temp))) in
+  prod_b (source,hax_temp_output))) : both (v_R × t_Result t_Z_curve t_ParseError) in
+  {| f_deserial := (@f_deserial)|}.
 Fail Next Obligation.
 Hint Unfold t_Z_curve_t_Deserial.
 
-Definition v_loc : Location :=
-  (t_Vec int8 t_Global;4%nat).
 #[global] Program Instance t_Z_curve_t_Serial : t_Serial t_Z_curve :=
-  let f_serial := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (self : both L1 I1 t_Z_curve) (out : both L2 I2 v_W) => letb (v : t_Vec int8 t_Global) loc(v_loc) := impl__new (ret_both (tt : 'unit)) in
-  letb _ := foldi_both_list (f_into_iter (impl_41__native_slice (impl__Scalar__to_public_byte_seq_be (f_val self)))) (fun x =>
-    ssp (fun _ =>
-      assign todo(term) : (both (*1*)(L1:|:fset [v_loc]) (I1) 'unit))) (ret_both (tt : 'unit)) in
-  letb '(tmp0,out) := f_serial v out in
-  letb _ := assign todo(term) in
-  letb hax_temp_output := out in
-  solve_lift (prod_b (out,hax_temp_output)) : both (L1 :|: L2 :|: fset [v_loc;vx_loc;vy_loc]) (I1 :|: I2) (v_W × t_Result 'unit f_Err) in
-  {| f_serial_loc := (fset [v_loc;vx_loc;vy_loc] : {fset Location});
-  f_serial := (@f_serial)|}.
+  let f_serial := fun  (self : both t_Z_curve) (out : both v_W) => letb (v : t_Vec int8 t_Global) := impl__new in
+  letb v := foldi_both_list (f_into_iter (impl_41__native_slice (impl__Scalar__to_public_byte_seq_be (f_z_val self)))) (fun x =>
+    ssp (fun v =>
+      impl_1__push v (f_clone x) : (both (t_Vec int8 t_Global)))) v in
+  letb '(tmp0,out1) := f_serial v out in
+  letb out := tmp0 in
+  letb hax_temp_output := out1 in
+  prod_b (out,hax_temp_output) : both (v_W × t_Result 'unit f_Err) in
+  {| f_serial := (@f_serial)|}.
 Fail Next Obligation.
 Hint Unfold t_Z_curve_t_Serial.
 
-#[global] Program Instance t_Z_curve_t_Field : t_Field t_Z_curve :=
-  let f_q := fun  {L : {fset Location}} {I : Interface} => solve_lift (Build_t_Z_curve (f_val := impl__Scalar__from_hex (ret_both (0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 : chString)))) : both (L :|: fset []) I t_Z_curve in
-  let f_random_field_elem := fun  {L1 : {fset Location}} {I1 : Interface} (random : both L1 I1 int32) => solve_lift (Build_t_Z_curve (f_val := impl__Scalar__from_literal (cast_int (WS2 := _) random))) : both (L1 :|: fset []) I1 t_Z_curve in
-  let f_field_zero := fun  {L : {fset Location}} {I : Interface} => solve_lift (Build_t_Z_curve (f_val := impl__Scalar__from_literal (ret_both (0 : int128)))) : both (L :|: fset []) I t_Z_curve in
-  let f_field_one := fun  {L : {fset Location}} {I : Interface} => solve_lift (Build_t_Z_curve (f_val := impl__Scalar__from_literal (ret_both (1 : int128)))) : both (L :|: fset []) I t_Z_curve in
-  let f_add := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_Z_curve) (y : both L2 I2 t_Z_curve) => solve_lift (Build_t_Z_curve (f_val := (f_val x) .+ (f_val y))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_Z_curve in
-  let f_sub := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_Z_curve) (y : both L2 I2 t_Z_curve) => solve_lift (Build_t_Z_curve (f_val := (f_val x) .- (f_val y))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_Z_curve in
-  let f_mul := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_Z_curve) (y : both L2 I2 t_Z_curve) => solve_lift (Build_t_Z_curve (f_val := (f_val x) .* (f_val y))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_Z_curve in
-  {| f_q_loc := (fset [] : {fset Location});
-  f_q := (@f_q);
-  f_random_field_elem_loc := (fset [] : {fset Location});
-  f_random_field_elem := (@f_random_field_elem);
-  f_field_zero_loc := (fset [] : {fset Location});
-  f_field_zero := (@f_field_zero);
-  f_field_one_loc := (fset [] : {fset Location});
-  f_field_one := (@f_field_one);
-  f_add_loc := (fset [] : {fset Location});
-  f_add := (@f_add);
-  f_sub_loc := (fset [] : {fset Location});
-  f_sub := (@f_sub);
-  f_mul_loc := (fset [] : {fset Location});
+#[global] Program Instance t_Z_curve_t_Mul : t_Mul t_Z_curve t_Z_curve :=
+  let f_Output := t_Z_curve : choice_type in
+  let f_mul := fun  (self : both t_Z_curve) (y : both t_Z_curve) => Build_t_Z_curve (f_z_val := (f_z_val self) .* (f_z_val y)) : both t_Z_curve in
+  {| f_Output := (@f_Output);
   f_mul := (@f_mul)|}.
+Fail Next Obligation.
+Hint Unfold t_Z_curve_t_Mul.
+
+#[global] Program Instance t_Z_curve_t_Product : t_Product t_Z_curve t_Z_curve :=
+  let f_product := fun  (iter : both v_I) => f_fold iter (Build_t_Z_curve (f_z_val := impl__Scalar__from_literal (ret_both (1 : int128)))) (fun a => fun b =>
+    a .* b) : both t_Z_curve in
+  {| f_product := (@f_product)|}.
+Fail Next Obligation.
+Hint Unfold t_Z_curve_t_Product.
+
+#[global] Program Instance t_Z_curve_t_Add : t_Add t_Z_curve t_Z_curve :=
+  let f_Output := t_Z_curve : choice_type in
+  let f_add := fun  (self : both t_Z_curve) (y : both t_Z_curve) => Build_t_Z_curve (f_z_val := (f_z_val self) .+ (f_z_val y)) : both t_Z_curve in
+  {| f_Output := (@f_Output);
+  f_add := (@f_add)|}.
+Fail Next Obligation.
+Hint Unfold t_Z_curve_t_Add.
+
+#[global] Program Instance t_Group_curve_t_Mul : t_Mul t_Group_curve t_Group_curve :=
+  let f_Output := t_Group_curve : choice_type in
+  let f_mul := fun  (self : both t_Group_curve) (y : both t_Group_curve) => Build_t_Group_curve (f_g_val := point_add (f_g_val self) (f_g_val y)) : both t_Group_curve in
+  {| f_Output := (@f_Output);
+  f_mul := (@f_mul)|}.
+Fail Next Obligation.
+Hint Unfold t_Group_curve_t_Mul.
+
+#[global] Program Instance t_Z_curve_t_Field : t_Field t_Z_curve :=
+  let f_q := fun  (_ : both 'unit) => Build_t_Z_curve (f_z_val := impl__Scalar__from_hex (ret_both (0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 : chString))) : both t_Z_curve in
+  let f_random_field_elem := fun  (random : both int32) => Build_t_Z_curve (f_z_val := impl__Scalar__from_literal (cast_int (WS2 := _) random)) : both t_Z_curve in
+  let f_field_zero := fun  (_ : both 'unit) => Build_t_Z_curve (f_z_val := impl__Scalar__from_literal (ret_both (0 : int128))) : both t_Z_curve in
+  let f_field_one := fun  (_ : both 'unit) => Build_t_Z_curve (f_z_val := impl__Scalar__from_literal (ret_both (1 : int128))) : both t_Z_curve in
+  let f_inv := fun  (x : both t_Z_curve) => run (letb _ := assert (ret_both (false : 'bool)) in
+  letm[choice_typeMonad.result_bind_code t_Z_curve] hoist29 := ControlFlow_Break x in
+  ControlFlow_Continue (never_to_any hoist29)) : both t_Z_curve in
+  {| f_q := (@f_q);
+  f_random_field_elem := (@f_random_field_elem);
+  f_field_zero := (@f_field_zero);
+  f_field_one := (@f_field_one);
+  f_inv := (@f_inv)|}.
 Fail Next Obligation.
 Hint Unfold t_Z_curve_t_Field.
 
-Definition result_loc : Location :=
-  (t_g_z_89_;13%nat).
-Definition res_loc : Location :=
-  (t_z_89_;12%nat).
+#[global] Program Instance t_Z_curve_t_Neg : t_Neg t_Z_curve :=
+  let f_Output := t_Z_curve : choice_type in
+  let f_neg := fun  (self : both t_Z_curve) => Build_t_Z_curve (f_z_val := (f_z_val f_field_zero) .- (f_z_val self)) : both t_Z_curve in
+  {| f_Output := (@f_Output);
+  f_neg := (@f_neg)|}.
+Fail Next Obligation.
+Hint Unfold t_Z_curve_t_Neg.
+
+#[global] Program Instance t_Group_curve_t_Product : t_Product t_Group_curve t_Group_curve :=
+  let f_product := fun  (iter : both v_I) => f_fold iter (f_g_pow f_field_zero) (fun a => fun b =>
+    a .* b) : both t_Group_curve in
+  {| f_product := (@f_product)|}.
+Fail Next Obligation.
+Hint Unfold t_Group_curve_t_Product.
+
 #[global] Program Instance t_Group_curve_t_Group : t_Group t_Group_curve :=
   let f_Z := t_Z_curve : choice_type in
-  let f_g := fun  {L : {fset Location}} {I : Interface} => letb gx := PBytes32 (array_from_list [ret_both (121 : int8);
+  let f_g := fun  (_ : both 'unit) => letb gx := PBytes32 (array_from_list [ret_both (121 : int8);
     ret_both (190 : int8);
     ret_both (102 : int8);
     ret_both (126 : int8);
@@ -319,36 +344,24 @@ Definition res_loc : Location :=
     ret_both (16 : int8);
     ret_both (212 : int8);
     ret_both (184 : int8)]) in
-  solve_lift (Build_t_Group_curve (f_val := Point_Affine (prod_b (impl__FieldElement__from_public_byte_seq_be gx,impl__FieldElement__from_public_byte_seq_be gy)))) : both (L :|: fset []) I t_Group_curve in
-  let f_pow := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (g : both L1 I1 t_Group_curve) (x : both L2 I2 t_Z_curve) => solve_lift (Build_t_Group_curve (f_val := point_mul (f_val x) (f_val g))) : both (L1 :|: L2 :|: fset [result_loc]) (I1 :|: I2) t_Group_curve in
-  let f_g_pow := fun  {L1 : {fset Location}} {I1 : Interface} (x : both L1 I1 t_Z_curve) => solve_lift (Build_t_Group_curve (f_val := point_mul_base (f_val x))) : both (L1 :|: fset []) I1 t_Group_curve in
-  let f_group_one := fun  {L : {fset Location}} {I : Interface} => solve_lift (f_g_pow (f_field_zero (ret_both (tt : 'unit)))) : both (L :|: fset []) I t_Group_curve in
-  let f_prod := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_Group_curve) (y : both L2 I2 t_Group_curve) => solve_lift (Build_t_Group_curve (f_val := point_add (f_val x) (f_val y))) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_Group_curve in
-  let f_inv := fun  {L1 : {fset Location}} {I1 : Interface} (x : both L1 I1 t_Group_curve) => solve_lift (Build_t_Group_curve (f_val := matchb f_val x with
+  Build_t_Group_curve (f_g_val := Point_Affine (prod_b (impl__FieldElement__from_public_byte_seq_be gx,impl__FieldElement__from_public_byte_seq_be gy))) : both t_Group_curve in
+  let f_pow := fun  (g : both t_Group_curve) (x : both t_Z_curve) => Build_t_Group_curve (f_g_val := point_mul (f_z_val x) (f_g_val g)) : both t_Group_curve in
+  let f_g_pow := fun  (x : both t_Z_curve) => Build_t_Group_curve (f_g_val := point_mul_base (f_z_val x)) : both t_Group_curve in
+  let f_group_one := fun  (_ : both 'unit) => f_g_pow f_field_zero : both t_Group_curve in
+  let f_group_inv := fun  (x : both t_Group_curve) => Build_t_Group_curve (f_g_val := matchb f_g_val x with
   | Point_Affine_case (a,b) =>
     letb '(a,b) := ret_both (((a,b)) : (t_FieldElement × t_FieldElement)) in
-    Point_Affine (solve_lift (prod_b (a,(impl__FieldElement__from_literal (ret_both (0 : int128))) .- b)))
+    Point_Affine (prod_b (a,(impl__FieldElement__from_literal (ret_both (0 : int128))) .- b))
   | Point_AtInfinity_case  =>
     Point_AtInfinity
-  end)) : both (L1 :|: fset []) I1 t_Group_curve in
-  let f_div := fun  {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (x : both L1 I1 t_Group_curve) (y : both L2 I2 t_Group_curve) => solve_lift (f_prod x (f_inv y)) : both (L1 :|: L2 :|: fset []) (I1 :|: I2) t_Group_curve in
-  let f_hash := fun  {L1 : {fset Location}} {I1 : Interface} (x : both L1 I1 (t_Vec t_Group_curve t_Global)) => solve_lift (f_field_one (ret_both (tt : 'unit))) : both (L1 :|: fset [res_loc]) I1 t_Z_curve in
+  end) : both t_Group_curve in
+  let f_hash := fun  (x : both (t_Vec t_Group_curve t_Global)) => f_field_one : both t_Z_curve in
   {| f_Z := (@f_Z);
-  f_g_loc := (fset [] : {fset Location});
   f_g := (@f_g);
-  f_pow_loc := (fset [result_loc] : {fset Location});
   f_pow := (@f_pow);
-  f_g_pow_loc := (fset [] : {fset Location});
   f_g_pow := (@f_g_pow);
-  f_group_one_loc := (fset [] : {fset Location});
   f_group_one := (@f_group_one);
-  f_prod_loc := (fset [] : {fset Location});
-  f_prod := (@f_prod);
-  f_inv_loc := (fset [] : {fset Location});
-  f_inv := (@f_inv);
-  f_div_loc := (fset [] : {fset Location});
-  f_div := (@f_div);
-  f_hash_loc := (fset [res_loc] : {fset Location});
+  f_group_inv := (@f_group_inv);
   f_hash := (@f_hash)|}.
 Fail Next Obligation.
 Hint Unfold t_Group_curve_t_Group.

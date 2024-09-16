@@ -53,6 +53,38 @@ impl hacspec_concordium::Serial for Z_curve {
     }
 }
 
+impl core::ops::Mul for Z_curve {
+    type Output = Self;
+    fn mul(self, y: Self) -> Self {
+        Z_curve { z_val: self.z_val * y.z_val }
+    }
+}
+
+impl core::iter::Product for Z_curve {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(
+            Z_curve {
+                z_val: Scalar::from_literal(1u128),
+            },
+            |a, b| a * b,
+        )
+    }
+}
+
+impl core::ops::Add for Z_curve {
+    type Output = Self;
+    fn add(self, y: Self) -> Self {
+        Z_curve { z_val: self.z_val + y.z_val }
+    }
+}
+
+impl core::ops::Neg for Z_curve {
+    type Output = Self;
+    fn neg(self) -> Self {
+        Z_curve { z_val: Self::field_zero().z_val - self.z_val }
+    }
+}
+
 impl Field for Z_curve {
     fn q() -> Self {
         Z_curve {
@@ -80,21 +112,9 @@ impl Field for Z_curve {
         } // Scalar::ONE()
     }
 
-    fn add(x: Self, y: Self) -> Self {
-        Z_curve { z_val: x.z_val + y.z_val }
-    }
-
-    fn opp(x: Self) -> Self {
-        Z_curve { z_val: Self::field_zero().z_val - x.z_val }
-    }
-
     // fn sub(x: Self, y: Self) -> Self {
     //     Z_curve { z_val: x.z_val - y.z_val }
     // }
-
-    fn mul(x: Self, y: Self) -> Self {
-        Z_curve { z_val: x.z_val * y.z_val }
-    }
 
     fn inv(x: Self) -> Self {
         assert!(false); // Missing
@@ -102,6 +122,7 @@ impl Field for Z_curve {
     }
 
 }
+
 
 #[derive(core::marker::Copy, Clone, PartialEq, Eq)]
 pub struct Group_curve {
@@ -153,6 +174,24 @@ impl hacspec_concordium::Serial for Group_curve {
     }
 }
 
+impl core::ops::Mul for Group_curve {
+    type Output = Self;
+    fn mul(self, y: Self) -> Self {
+        Group_curve {
+            g_val: point_add(self.g_val, y.g_val),
+        }
+    }
+}
+
+impl core::iter::Product for Group_curve {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(
+            Self::g_pow(<Z_curve as Field>::field_zero()),
+            |a, b| a * b,
+        )
+    }
+}
+
 impl Group for Group_curve {
     type Z = Z_curve;
 
@@ -195,12 +234,6 @@ impl Group for Group_curve {
 
     fn group_one() -> Self {
         Self::g_pow(<Z_curve as Field>::field_zero())
-    }
-
-    fn prod(x: Self, y: Self) -> Self {
-        Group_curve {
-            g_val: point_add(x.g_val, y.g_val),
-        }
     }
 
     fn group_inv(x: Self) -> Self {

@@ -44,6 +44,44 @@ pub struct z_89 { z_val : u8 }
 //     }
 // }
 
+impl core::ops::Mul for z_89 {
+    type Output = Self;
+    fn mul(self, y: Self) -> Self {
+        let q_ = Self::q().z_val - 1;
+        let x_ : u16 = (self.z_val % q_) as u16;
+        let y_ : u16 = (y.z_val % q_) as u16;
+        z_89{ z_val: ((x_ * y_) % (q_ as u16)) as u8 }
+    }
+}
+
+impl core::iter::Product for z_89 {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(
+            z_89{ z_val: 1u8 },
+            |a, b| a * b,
+        )
+    }
+}
+
+impl core::ops::Add for z_89 {
+    type Output = Self;
+    fn add(self, y: Self) -> Self {
+        let q_ = Self::q().z_val - 1;
+        let x_ = self.z_val % q_;
+        let y_ = y.z_val % q_;
+        z_89{ z_val: (x_ + y_) % q_ }
+    }
+}
+
+impl core::ops::Neg for z_89 {
+    type Output = Self;
+    fn neg(self) -> Self {
+        let q_ = Self::q().z_val - 1;
+        let x_ = self.z_val % q_;
+        z_89{ z_val: q_ - x_ }
+    }
+}
+
 impl Field for z_89 {
     fn q() -> Self {
         z_89{ z_val: 89u8}
@@ -58,26 +96,6 @@ impl Field for z_89 {
 
     fn field_one() -> Self {
         z_89{ z_val: 1u8 }
-    }
-
-    fn add(x: Self, y: Self) -> Self {
-        let q_ = Self::q().z_val - 1;
-        let x_ = x.z_val % q_;
-        let y_ = y.z_val % q_;
-        z_89{ z_val: (x_ + y_) % q_ }
-    }
-
-    fn opp(x: Self) -> Self {
-        let q_ = Self::q().z_val - 1;
-        let x_ = x.z_val % q_;
-        z_89{ z_val: q_ - x_ }
-    }
-
-    fn mul(x: Self, y: Self) -> Self {
-        let q_ = Self::q().z_val - 1;
-        let x_ : u16 = (x.z_val % q_) as u16;
-        let y_ : u16 = (y.z_val % q_) as u16;
-        z_89{ z_val: ((x_ * y_) % (q_ as u16)) as u8 }
     }
 
     fn inv(x: Self) -> Self {
@@ -108,6 +126,24 @@ pub struct g_z_89 { g_val : u8 }
 //     }
 // }
 
+impl core::ops::Mul for g_z_89 {
+    type Output = Self;
+    fn mul(self, y: Self) -> Self {
+        let q_ = z_89::q().z_val;
+        let x_ = (self.g_val % q_) as u16;
+        let y_ = (y.g_val % q_) as u16;
+        g_z_89 { g_val: ((x_ * y_) % (q_ as u16)) as u8 }
+    }
+}
+
+impl core::iter::Product for g_z_89 {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(
+            g_z_89 { g_val: 1 },
+            |a, b| a * b,
+        )
+    }
+}
 
 impl Group for g_z_89 {
     type Z = z_89;
@@ -119,7 +155,7 @@ impl Group for g_z_89 {
     fn hash(x: Vec<Self>) -> z_89 {
         let mut res = z_89::field_one();
         for y in x {
-            res = z_89::mul(z_89{z_val: y.g_val}, res);
+            res = z_89{z_val: y.g_val} * /* field product */ res;
         }
         res // TODO
     }
@@ -132,7 +168,7 @@ impl Group for g_z_89 {
     fn pow(g: Self, x: z_89) -> Self {
         let mut result = Self::group_one();
         for _ in 0..(x.z_val % (z_89::q().z_val - 1)) {
-            result = Self::prod(result, g);
+            result = result * /* group product */ g;
         }
         result
     }
@@ -141,17 +177,10 @@ impl Group for g_z_89 {
         g_z_89 { g_val: 1 }
     }
 
-    fn prod(x: Self, y: Self) -> Self {
-        let q_ = z_89::q().z_val;
-        let x_ = (x.g_val % q_) as u16;
-        let y_ = (y.g_val % q_) as u16;
-        g_z_89 { g_val: ((x_ * y_) % (q_ as u16)) as u8 }
-    }
-
     fn group_inv(x: Self) -> Self {
         for j in 0..89 {
             let g_value = g_z_89 {g_val: j};
-            if Self::prod(x, g_value) == Self::group_one() {
+            if x * /* group product */ g_value == Self::group_one() {
                 return g_value;
             }
         }

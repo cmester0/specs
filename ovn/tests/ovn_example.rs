@@ -102,7 +102,7 @@ pub fn sum_to_zero<G: Group, const n: usize>() {
     let mut res = G::group_one();
     for i in 0..n {
         let g_pow_yi = compute_g_pow_yi::<G, n>(i, g_pow_xis);
-        res = G::prod(res, G::pow(g_pow_yi, xis[i]));
+        res = (res * /* group product */  G::pow(g_pow_yi, xis[i]));
     }
 
     assert!(res == G::group_one());

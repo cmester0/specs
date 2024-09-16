@@ -11,13 +11,22 @@ use hax_lib_macros::*;
 #[exclude]
 use hacspec_concordium::*;
 
+// use hax_lib::lemma;
+
+use core::iter::Product;
+#[exclude]
+use core::marker::Copy;
+#[exclude]
+use core::ops::{Add, Mul, Neg};
 
 ////////////
 // Traits //
 ////////////
 
 /** Interface for field implementation */
-pub trait Field: core::marker::Copy + PartialEq + Eq + Clone + Copy + hacspec_concordium::Serialize {
+pub trait Field:
+    Copy + PartialEq + Eq + Clone + Copy + hacspec_concordium::Serialize + Mul<Output=Self> + Product + Add<Output=Self> + Neg<Output=Self>
+{
     fn q() -> Self;
 
     fn random_field_elem(random: u32) -> Self;
@@ -25,23 +34,26 @@ pub trait Field: core::marker::Copy + PartialEq + Eq + Clone + Copy + hacspec_co
     fn field_zero() -> Self;
     fn field_one() -> Self;
 
-    fn add(x: Self, y: Self) -> Self;
-    fn opp(x: Self) -> Self;
-
-    fn mul(x: Self, y: Self) -> Self;
     fn inv(x: Self) -> Self;
 }
 
+// #[hax_lib::lemma]
+// #[hax_lib::requires(true)]
+// fn addC<G: Group>(x: G, y: G) -> Proof<{ x + y == y + x }>
+// {
+// }
+
 /** Interface for group implementation */
-pub trait Group: core::marker::Copy + PartialEq + Eq + Clone + Copy + hacspec_concordium::Serialize {
-    type Z : Field;
+pub trait Group:
+    Copy + PartialEq + Eq + Clone + Copy + hacspec_concordium::Serialize + Mul<Output=Self> + Product
+{
+    type Z: Field;
 
     fn g() -> Self; // Generator (elemnent of group)
 
     fn g_pow(x: Self::Z) -> Self;
     fn pow(g: Self, x: Self::Z) -> Self; // TODO: Link with q
     fn group_one() -> Self;
-    fn prod(x: Self, y: Self) -> Self;
     fn group_inv(x: Self) -> Self;
 
     fn hash(x: Vec<Self>) -> Self::Z;
