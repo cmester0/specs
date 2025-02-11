@@ -39,6 +39,7 @@ pub fn schnorr_zkp_correctness<G: Group>(random_x: u32, random_r: u32) -> bool {
     valid
 }
 
+#[test]
 pub fn schnorr_zkp_z_89_correctness() {
     QuickCheck::new()
         .tests(10000)

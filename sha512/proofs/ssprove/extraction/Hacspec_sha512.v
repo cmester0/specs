@@ -4,7 +4,7 @@ From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
 From mathcomp Require Import word_ssrZ word.
-From Jasmin Require Import word.
+(* From Jasmin Require Import word. *)
 
 From Coq Require Import ZArith.
 From Coq Require Import Strings.String.
@@ -28,48 +28,48 @@ Require Import Hacspec_lib.
 Export Hacspec_lib.
 
 Notation "'t_Block'" := (nseq int8 BLOCK_SIZE).
-Definition Block {L : {fset Location}} {I : Interface} : both L I (t_Block) -> both L I (t_Block) :=
+Definition Block : both t_Block -> both t_Block :=
   id.
 
 Notation "'t_Hash'" := (nseq int64 8).
-Definition Hash {L : {fset Location}} {I : Interface} : both L I (t_Hash) -> both L I (t_Hash) :=
+Definition Hash : both t_Hash -> both t_Hash :=
   id.
 
 Notation "'t_OpTableType'" := (nseq int32 12).
-Definition OpTableType {L : {fset Location}} {I : Interface} : both L I (t_OpTableType) -> both L I (t_OpTableType) :=
+Definition OpTableType : both t_OpTableType -> both t_OpTableType :=
   id.
 
 Notation "'t_RoundConstantsTable'" := (nseq int64 K_SIZE).
-Definition RoundConstantsTable {L : {fset Location}} {I : Interface} : both L I (t_RoundConstantsTable) -> both L I (t_RoundConstantsTable) :=
+Definition RoundConstantsTable : both t_RoundConstantsTable -> both t_RoundConstantsTable :=
   id.
 
 Notation "'t_Sha512Digest'" := (nseq int8 HASH_SIZE).
-Definition Sha512Digest {L : {fset Location}} {I : Interface} : both L I (t_Sha512Digest) -> both L I (t_Sha512Digest) :=
+Definition Sha512Digest : both t_Sha512Digest -> both t_Sha512Digest :=
   id.
 
 (*Not implemented yet? todo(item)*)
 
-Equations v_BLOCK_SIZE {L : {fset Location}} {I : Interface} : both L I (uint_size) :=
+Equations v_BLOCK_SIZE : both uint_size :=
   v_BLOCK_SIZE  :=
-    solve_lift (ret_both (128 : uint_size)) : both L I (uint_size).
+    solve_lift (ret_both (128 : uint_size)) : both uint_size.
 Fail Next Obligation.
 
-Equations v_HASH_SIZE {L : {fset Location}} {I : Interface} : both L I (uint_size) :=
+Equations v_HASH_SIZE : both uint_size :=
   v_HASH_SIZE  :=
-    solve_lift ((ret_both (512 : uint_size)) ./ (ret_both (8 : uint_size))) : both L I (uint_size).
+    solve_lift ((ret_both (512 : uint_size)) ./ (ret_both (8 : uint_size))) : both uint_size.
 Fail Next Obligation.
 
-Equations v_K_SIZE {L : {fset Location}} {I : Interface} : both L I (uint_size) :=
+Equations v_K_SIZE : both uint_size :=
   v_K_SIZE  :=
-    solve_lift (ret_both (80 : uint_size)) : both L I (uint_size).
+    solve_lift (ret_both (80 : uint_size)) : both uint_size.
 Fail Next Obligation.
 
-Equations v_LEN_SIZE {L : {fset Location}} {I : Interface} : both L I (uint_size) :=
+Equations v_LEN_SIZE : both uint_size :=
   v_LEN_SIZE  :=
-    solve_lift (ret_both (16 : uint_size)) : both L I (uint_size).
+    solve_lift (ret_both (16 : uint_size)) : both uint_size.
 Fail Next Obligation.
 
-Equations v_OP_TABLE {L : {fset Location}} {I : Interface} : both L I (t_OpTableType) :=
+Equations v_OP_TABLE : both t_OpTableType :=
   v_OP_TABLE  :=
     OpTableType (array_from_list [solve_lift (ret_both (28 : uint_size));
       solve_lift (ret_both (34 : uint_size));
@@ -82,53 +82,48 @@ Equations v_OP_TABLE {L : {fset Location}} {I : Interface} : both L I (t_OpTable
       solve_lift (ret_both (7 : uint_size));
       solve_lift (ret_both (19 : uint_size));
       solve_lift (ret_both (61 : uint_size));
-      solve_lift (ret_both (6 : uint_size))]) : both L I (t_OpTableType).
+      solve_lift (ret_both (6 : uint_size))]) : both t_OpTableType.
 Fail Next Obligation.
 
-Equations ch {L1 : {fset Location}} {L2 : {fset Location}} {L3 : {fset Location}} {I1 : Interface} {I2 : Interface} {I3 : Interface} (x : both L1 I1 (t_U64)) (y : both L2 I2 (t_U64)) (z : both L3 I3 (t_U64)) : both (L1 :|: L2 :|: L3) (I1 :|: I2 :|: I3) (t_U64) :=
+Equations ch (x : both t_U64) (y : both t_U64) (z : both t_U64) : both t_U64 :=
   ch x y z  :=
-    solve_lift ((x .& y) .^ ((f_not x) .& z)) : both (L1 :|: L2 :|: L3) (I1 :|: I2 :|: I3) (t_U64).
+    solve_lift ((x .& y) .^ ((f_not x) .& z)) : both t_U64.
 Fail Next Obligation.
 
-Equations maj {L1 : {fset Location}} {L2 : {fset Location}} {L3 : {fset Location}} {I1 : Interface} {I2 : Interface} {I3 : Interface} (x : both L1 I1 (t_U64)) (y : both L2 I2 (t_U64)) (z : both L3 I3 (t_U64)) : both (L1 :|: L2 :|: L3) (I1 :|: I2 :|: I3) (t_U64) :=
+Equations maj (x : both t_U64) (y : both t_U64) (z : both t_U64) : both t_U64 :=
   maj x y z  :=
-    solve_lift ((x .& y) .^ ((x .& z) .^ (y .& z))) : both (L1 :|: L2 :|: L3) (I1 :|: I2 :|: I3) (t_U64).
+    solve_lift ((x .& y) .^ ((x .& z) .^ (y .& z))) : both t_U64.
 Fail Next Obligation.
 
-Definition tmp_loc : Location :=
-  (t_U64;0%nat).
-Equations sigma {L1 : {fset Location}} {L2 : {fset Location}} {L3 : {fset Location}} {I1 : Interface} {I2 : Interface} {I3 : Interface} (x : both L1 I1 (t_U64)) (i : both L2 I2 (uint_size)) (op : both L3 I3 (uint_size)) : both (L1 :|: L2 :|: L3 :|: fset [tmp_loc]) (I1 :|: I2 :|: I3) (t_U64) :=
+Equations sigma (x : both t_U64) (i : both uint_size) (op : both uint_size) : both t_U64 :=
   sigma x i op  :=
-    letb (tmp : t_U64) loc(tmp_loc) := impl__U64__rotate_right x (v_OP_TABLE.a[(((ret_both (3 : uint_size)) .* i) .+ (ret_both (2 : uint_size)))]) in
-    letb _ := ifb op =.? (ret_both (0 : uint_size))
-    then assign todo(term)
-    else () in
-    solve_lift (((impl__U64__rotate_right x (v_OP_TABLE.a[((ret_both (3 : uint_size)) .* i)])) .^ (impl__U64__rotate_right x (v_OP_TABLE.a[(((ret_both (3 : uint_size)) .* i) .+ (ret_both (1 : uint_size)))]))) .^ tmp) : both (L1 :|: L2 :|: L3 :|: fset [tmp_loc]) (I1 :|: I2 :|: I3) (t_U64).
+    letb (tmp : t_U64) := impl__U64__rotate_right x (v_OP_TABLE.a[(((ret_both (3 : uint_size)) .* i) .+ (ret_both (2 : uint_size)))]) in
+    letb tmp := ifb op =.? (ret_both (0 : uint_size))
+    then x shift_right (v_OP_TABLE.a[(((ret_both (3 : uint_size)) .* i) .+ (ret_both (2 : uint_size)))])
+    else tmp in
+    solve_lift (((impl__U64__rotate_right x (v_OP_TABLE.a[((ret_both (3 : uint_size)) .* i)])) .^ (impl__U64__rotate_right x (v_OP_TABLE.a[(((ret_both (3 : uint_size)) .* i) .+ (ret_both (1 : uint_size)))]))) .^ tmp) : both t_U64.
 Fail Next Obligation.
 
-Definition s_loc : Location :=
-  (t_RoundConstantsTable;1%nat).
-Equations schedule {L1 : {fset Location}} {I1 : Interface} (block : both L1 I1 (t_Block)) : both (L1 :|: fset [s_loc;tmp_loc]) I1 (t_RoundConstantsTable) :=
+Equations schedule (block : both t_Block) : both t_RoundConstantsTable :=
   schedule block  :=
     letb b := impl__Block__to_be_U64s block in
-    letb s loc(s_loc) := impl__RoundConstantsTable__new (ret_both (tt : 'unit)) in
-    letb _ := foldi_both_list (f_into_iter (Build_t_Range (f_start := ret_both (0 : uint_size)) (f_end := v_K_SIZE))) (fun i =>
-      ssp (fun _ =>
-        solve_lift (ifb i <.? (ret_both (16 : uint_size))
-        then letb _ := assign todo(term) in
-        ret_both (tt : 'unit)
-        else letb t16 := s.a[(i .- (ret_both (16 : uint_size)))] in
-        letb t15 := s.a[(i .- (ret_both (15 : uint_size)))] in
-        letb t7 := s.a[(i .- (ret_both (7 : uint_size)))] in
-        letb t2 := s.a[(i .- (ret_both (2 : uint_size)))] in
-        letb s1 := sigma t2 (ret_both (3 : uint_size)) (ret_both (0 : uint_size)) in
-        letb s0 := sigma t15 (ret_both (2 : uint_size)) (ret_both (0 : uint_size)) in
-        letb _ := assign todo(term) in
-        ret_both (tt : 'unit)) : both (*2*)(L1:|:fset [s_loc;tmp_loc]) (I1) ('unit))) (ret_both (tt : 'unit)) in
-    solve_lift s : both (L1 :|: fset [s_loc;tmp_loc]) I1 (t_RoundConstantsTable).
+    letb s := impl__RoundConstantsTable__new (ret_both (tt : 'unit)) in
+    letb s := f_fold (f_into_iter (Build_t_Range (f_start := ret_both (0 : uint_size)) (f_end := v_K_SIZE))) s (fun s => fun i =>
+      ifb i <.? (ret_both (16 : uint_size))
+      then letb s := update_at_usize s i (b.a[i]) in
+      s
+      else letb t16 := s.a[(i .- (ret_both (16 : uint_size)))] in
+      letb t15 := s.a[(i .- (ret_both (15 : uint_size)))] in
+      letb t7 := s.a[(i .- (ret_both (7 : uint_size)))] in
+      letb t2 := s.a[(i .- (ret_both (2 : uint_size)))] in
+      letb s1 := sigma t2 (ret_both (3 : uint_size)) (ret_both (0 : uint_size)) in
+      letb s0 := sigma t15 (ret_both (2 : uint_size)) (ret_both (0 : uint_size)) in
+      letb s := update_at_usize s i (((s1 .+ t7) .+ s0) .+ t16) in
+      s) in
+    solve_lift s : both t_RoundConstantsTable.
 Fail Next Obligation.
 
-Equations v_HASH_INIT {L : {fset Location}} {I : Interface} : both L I (t_Hash) :=
+Equations v_HASH_INIT : both t_Hash :=
   v_HASH_INIT  :=
     Hash (array_from_list [U64 (solve_lift (ret_both (7640891576956012808 : int64)));
       U64 (solve_lift (ret_both (13503953896175478587 : int64)));
@@ -137,10 +132,10 @@ Equations v_HASH_INIT {L : {fset Location}} {I : Interface} : both L I (t_Hash) 
       U64 (solve_lift (ret_both (5840696475078001361 : int64)));
       U64 (solve_lift (ret_both (11170449401992604703 : int64)));
       U64 (solve_lift (ret_both (2270897969802886507 : int64)));
-      U64 (solve_lift (ret_both (6620516959819538809 : int64)))]) : both L I (t_Hash).
+      U64 (solve_lift (ret_both (6620516959819538809 : int64)))]) : both t_Hash.
 Fail Next Obligation.
 
-Equations v_K_TABLE {L : {fset Location}} {I : Interface} : both L I (t_RoundConstantsTable) :=
+Equations v_K_TABLE : both t_RoundConstantsTable :=
   v_K_TABLE  :=
     RoundConstantsTable (array_from_list [U64 (solve_lift (ret_both (4794697086780616226 : int64)));
       U64 (solve_lift (ret_both (8158064640168781261 : int64)));
@@ -221,88 +216,73 @@ Equations v_K_TABLE {L : {fset Location}} {I : Interface} : both L I (t_RoundCon
       U64 (solve_lift (ret_both (5532061633213252278 : int64)));
       U64 (solve_lift (ret_both (6448918945643986474 : int64)));
       U64 (solve_lift (ret_both (6902733635092675308 : int64)));
-      U64 (solve_lift (ret_both (7801388544844847127 : int64)))]) : both L I (t_RoundConstantsTable).
+      U64 (solve_lift (ret_both (7801388544844847127 : int64)))]) : both t_RoundConstantsTable.
 Fail Next Obligation.
 
-Definition h_loc : Location :=
-  (t_Hash;2%nat).
-Equations shuffle {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (ws : both L1 I1 (t_RoundConstantsTable)) (hashi : both L2 I2 (t_Hash)) : both (L1 :|: L2 :|: fset [h_loc;tmp_loc]) (I1 :|: I2) (t_Hash) :=
+Equations shuffle (ws : both t_RoundConstantsTable) (hashi : both t_Hash) : both t_Hash :=
   shuffle ws hashi  :=
-    letb h loc(h_loc) := hashi in
-    letb _ := foldi_both_list (f_into_iter (Build_t_Range (f_start := ret_both (0 : uint_size)) (f_end := v_K_SIZE))) (fun i =>
-      ssp (fun _ =>
-        letb a0 := h.a[(ret_both (0 : int32))] in
-        letb b0 := h.a[(ret_both (1 : int32))] in
-        letb c0 := h.a[(ret_both (2 : int32))] in
-        letb d0 := h.a[(ret_both (3 : int32))] in
-        letb e0 := h.a[(ret_both (4 : int32))] in
-        letb f0 := h.a[(ret_both (5 : int32))] in
-        letb g0 := h.a[(ret_both (6 : int32))] in
-        letb (h0 : t_U64) := h.a[(ret_both (7 : int32))] in
-        letb t1 := (((h0 .+ (sigma e0 (ret_both (1 : uint_size)) (ret_both (1 : uint_size)))) .+ (ch e0 f0 g0)) .+ (v_K_TABLE.a[i])) .+ (ws.a[i]) in
-        letb t2 := (sigma a0 (ret_both (0 : uint_size)) (ret_both (1 : uint_size))) .+ (maj a0 b0 c0) in
-        letb _ := assign todo(term) in
-        letb _ := assign todo(term) in
-        letb _ := assign todo(term) in
-        letb _ := assign todo(term) in
-        letb _ := assign todo(term) in
-        letb _ := assign todo(term) in
-        letb _ := assign todo(term) in
-        letb _ := assign todo(term) in
-        solve_lift (ret_both (tt : 'unit)) : both (*2*)(L1:|:L2:|:fset [h_loc;tmp_loc]) (I1:|:I2) ('unit))) (ret_both (tt : 'unit)) in
-    solve_lift h : both (L1 :|: L2 :|: fset [h_loc;tmp_loc]) (I1 :|: I2) (t_Hash).
+    letb h := hashi in
+    letb h := f_fold (f_into_iter (Build_t_Range (f_start := ret_both (0 : uint_size)) (f_end := v_K_SIZE))) h (fun h => fun i =>
+      letb a0 := h.a[(ret_both (0 : int32))] in
+      letb b0 := h.a[(ret_both (1 : int32))] in
+      letb c0 := h.a[(ret_both (2 : int32))] in
+      letb d0 := h.a[(ret_both (3 : int32))] in
+      letb e0 := h.a[(ret_both (4 : int32))] in
+      letb f0 := h.a[(ret_both (5 : int32))] in
+      letb g0 := h.a[(ret_both (6 : int32))] in
+      letb (h0 : t_U64) := h.a[(ret_both (7 : int32))] in
+      letb t1 := (((h0 .+ (sigma e0 (ret_both (1 : uint_size)) (ret_both (1 : uint_size)))) .+ (ch e0 f0 g0)) .+ (v_K_TABLE.a[i])) .+ (ws.a[i]) in
+      letb t2 := (sigma a0 (ret_both (0 : uint_size)) (ret_both (1 : uint_size))) .+ (maj a0 b0 c0) in
+      letb h := update_at h (ret_both (0 : int32)) (t1 .+ t2) in
+      letb h := update_at h (ret_both (1 : int32)) a0 in
+      letb h := update_at h (ret_both (2 : int32)) b0 in
+      letb h := update_at h (ret_both (3 : int32)) c0 in
+      letb h := update_at h (ret_both (4 : int32)) (d0 .+ t1) in
+      letb h := update_at h (ret_both (5 : int32)) e0 in
+      letb h := update_at h (ret_both (6 : int32)) f0 in
+      letb h := update_at h (ret_both (7 : int32)) g0 in
+      h) in
+    solve_lift h : both t_Hash.
 Fail Next Obligation.
 
-Definition h_loc : Location :=
-  (t_Hash;3%nat).
-Equations compress {L1 : {fset Location}} {L2 : {fset Location}} {I1 : Interface} {I2 : Interface} (block : both L1 I1 (t_Block)) (h_in : both L2 I2 (t_Hash)) : both (L1 :|: L2 :|: fset [h_loc;s_loc;tmp_loc;h_loc;tmp_loc]) (I1 :|: I2) (t_Hash) :=
+Equations compress (block : both t_Block) (h_in : both t_Hash) : both t_Hash :=
   compress block h_in  :=
     letb s := schedule block in
-    letb h loc(h_loc) := shuffle s h_in in
-    letb _ := foldi_both_list (f_into_iter (Build_t_Range (f_start := ret_both (0 : int32)) (f_end := ret_both (8 : int32)))) (fun i =>
-      ssp (fun _ =>
-        assign todo(term) : both (*4*)(L1:|:L2:|:fset [h_loc;h_loc;s_loc;tmp_loc]) (I1:|:I2) ('unit))) (ret_both (tt : 'unit)) in
-    solve_lift h : both (L1 :|: L2 :|: fset [h_loc;s_loc;tmp_loc;h_loc;tmp_loc]) (I1 :|: I2) (t_Hash).
+    letb h := shuffle s h_in in
+    letb h := f_fold (f_into_iter (Build_t_Range (f_start := ret_both (0 : int32)) (f_end := ret_both (8 : int32)))) h (fun h => fun i =>
+      update_at h i ((h.a[i]) .+ (h_in.a[i]))) in
+    solve_lift h : both t_Hash.
 Fail Next Obligation.
 
-Definition h_loc : Location :=
-  (t_Hash;4%nat).
-Definition last_block_loc : Location :=
-  (t_Block;5%nat).
-Definition last_block_len_loc : Location :=
-  (uint_size;6%nat).
-Definition pad_block_loc : Location :=
-  (t_Block;7%nat).
-Equations hash {L1 : {fset Location}} {I1 : Interface} (msg : both L1 I1 (t_Seq (t_U8))) : both (L1 :|: fset [h_loc;last_block_loc;last_block_len_loc;pad_block_loc;h_loc;s_loc;tmp_loc;h_loc;tmp_loc]) I1 (t_Sha512Digest) :=
+Equations hash (msg : both (t_Seq t_U8)) : both t_Sha512Digest :=
   hash msg  :=
-    letb h loc(h_loc) := v_HASH_INIT in
-    letb last_block loc(last_block_loc) := impl__Block__new (ret_both (tt : 'unit)) in
-    letb last_block_len loc(last_block_len_loc) := ret_both (0 : uint_size) in
-    letb _ := foldi_both_list (f_into_iter (Build_t_Range (f_start := ret_both (0 : uint_size)) (f_end := impl_41__num_chunks msg v_BLOCK_SIZE))) (fun i =>
-      ssp (fun _ =>
-        letb '(block_len,block) := impl_41__get_chunk msg v_BLOCK_SIZE i in
-        solve_lift (ifb block_len <.? v_BLOCK_SIZE
-        then letb _ := assign todo(term) in
-        letb _ := assign todo(term) in
-        ret_both (tt : 'unit)
-        else letb compress_input := impl__Block__from_seq block in
-        letb _ := assign todo(term) in
-        ret_both (tt : 'unit)) : both (*5*)(L1:|:L1:|:fset [h_loc;h_loc;h_loc;s_loc;tmp_loc]) (I1:|:I1) ('unit))) (ret_both (tt : 'unit)) in
-    letb _ := assign todo(term) in
+    letb h := v_HASH_INIT in
+    letb last_block := impl__Block__new (ret_both (tt : 'unit)) in
+    letb last_block_len := ret_both (0 : uint_size) in
+    letb '(h,last_block,last_block_len) := f_fold (f_into_iter (Build_t_Range (f_start := ret_both (0 : uint_size)) (f_end := impl_41__num_chunks msg v_BLOCK_SIZE))) (prod_b (h,last_block,last_block_len)) (fun '(h,last_block,last_block_len) => fun i =>
+      letb '(block_len,block) := impl_41__get_chunk msg v_BLOCK_SIZE i in
+      ifb block_len <.? v_BLOCK_SIZE
+      then letb last_block := f_update_start (impl__Block__new (ret_both (tt : 'unit))) block in
+      letb last_block_len := block_len in
+      prod_b (h,last_block,last_block_len)
+      else letb compress_input := impl__Block__from_seq block in
+      letb h := compress compress_input h in
+      prod_b (h,last_block,last_block_len)) in
+    letb last_block := update_at_usize last_block last_block_len (U8 (ret_both (128 : int8))) in
     letb len_bist := U128 (cast_int (WS2 := _) ((impl_41__len msg) .* (ret_both (8 : uint_size)))) in
-    letb _ := ifb last_block_len <.? (v_BLOCK_SIZE .- v_LEN_SIZE)
-    then letb _ := assign todo(term) in
-    letb _ := assign todo(term) in
-    ret_both (tt : 'unit)
-    else letb pad_block loc(pad_block_loc) := impl__Block__new (ret_both (tt : 'unit)) in
-    letb _ := assign todo(term) in
-    letb _ := assign todo(term) in
-    letb _ := assign todo(term) in
-    ret_both (tt : 'unit) in
-    solve_lift (impl__Sha512Digest__from_seq (impl__Hash__to_be_bytes h)) : both (L1 :|: fset [h_loc;last_block_loc;last_block_len_loc;pad_block_loc;h_loc;s_loc;tmp_loc;h_loc;tmp_loc]) I1 (t_Sha512Digest).
+    letb '(h,last_block) := ifb last_block_len <.? (v_BLOCK_SIZE .- v_LEN_SIZE)
+    then letb last_block := f_update last_block (v_BLOCK_SIZE .- v_LEN_SIZE) (v_U128_to_be_bytes len_bist) in
+    letb h := compress last_block h in
+    prod_b (h,last_block)
+    else letb pad_block := impl__Block__new (ret_both (tt : 'unit)) in
+    letb pad_block := f_update pad_block (v_BLOCK_SIZE .- v_LEN_SIZE) (v_U128_to_be_bytes len_bist) in
+    letb h := compress last_block h in
+    letb h := compress pad_block h in
+    prod_b (h,last_block) in
+    solve_lift (impl__Sha512Digest__from_seq (impl__Hash__to_be_bytes h)) : both t_Sha512Digest.
 Fail Next Obligation.
 
-Equations sha512 {L1 : {fset Location}} {I1 : Interface} (msg : both L1 I1 (t_Seq (t_U8))) : both (L1 :|: fset [h_loc;last_block_loc;last_block_len_loc;pad_block_loc;h_loc;s_loc;tmp_loc;h_loc;tmp_loc]) I1 (t_Sha512Digest) :=
+Equations sha512 (msg : both (t_Seq t_U8)) : both t_Sha512Digest :=
   sha512 msg  :=
-    solve_lift (hash msg) : both (L1 :|: fset [h_loc;last_block_loc;last_block_len_loc;pad_block_loc;h_loc;s_loc;tmp_loc;h_loc;tmp_loc]) I1 (t_Sha512Digest).
+    solve_lift (hash msg) : both t_Sha512Digest.
 Fail Next Obligation.

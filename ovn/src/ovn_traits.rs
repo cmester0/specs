@@ -13,6 +13,7 @@ use hacspec_concordium::*;
 
 // use hax_lib::lemma;
 
+#[exclude]
 use core::iter::Product;
 #[exclude]
 use core::marker::Copy;
@@ -25,7 +26,16 @@ use core::ops::{Add, Mul, Neg};
 
 /** Interface for field implementation */
 pub trait Field:
-    Copy + PartialEq + Eq + Clone + Copy + hacspec_concordium::Serialize + Mul<Output=Self> + Product + Add<Output=Self> + Neg<Output=Self>
+    Copy
+    + PartialEq
+    + Eq
+    + Clone
+    + Copy
+    + hacspec_concordium::Serialize
+    + Mul<Output = Self>
+    + Product
+    + Add<Output = Self>
+    + Neg<Output = Self>
 {
     fn q() -> Self;
 
@@ -37,15 +47,9 @@ pub trait Field:
     fn inv(x: Self) -> Self;
 }
 
-// #[hax_lib::lemma]
-// #[hax_lib::requires(true)]
-// fn addC<G: Group>(x: G, y: G) -> Proof<{ x + y == y + x }>
-// {
-// }
-
 /** Interface for group implementation */
 pub trait Group:
-    Copy + PartialEq + Eq + Clone + Copy + hacspec_concordium::Serialize + Mul<Output=Self> + Product
+    Copy + PartialEq + Eq + Clone + Copy + hacspec_concordium::Serialize + Mul<Output = Self> + Product
 {
     type Z: Field;
 

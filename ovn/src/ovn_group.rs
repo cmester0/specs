@@ -1,3 +1,4 @@
+use hax_lib::{implies, lemma};
 #[hax_lib_macros::exclude]
 use hax_lib_macros::*;
 
@@ -19,6 +20,10 @@ fn sub<Z: Field>(x: Z, y: Z) -> Z {
 fn div<G: Group>(x: G, y: G) -> G {
     x * G::group_inv(y)
 }
+
+// #[hax_lib::lemma]
+// #[hax_lib::requires(true)]
+// fn addC<Z: Field>(x: Z, y: Z) -> Proof<{ implies(x != Z::field_zero(), || x + y == y + x) }> {}
 
 ////////////////////
 // Implementation //
@@ -50,8 +55,7 @@ pub fn schnorr_zkp<G: Group>(random: G::Z, h: G, x: G::Z) -> SchnorrZKPCommit<G>
 // https://crypto.stanford.edu/cs355/19sp/lec5.pdf
 pub fn schnorr_zkp_validate<G: Group>(h: G, pi: SchnorrZKPCommit<G>) -> bool {
     pi.schnorr_zkp_c == G::hash(vec![G::g(), h, pi.schnorr_zkp_u])
-        && G::g_pow(pi.schnorr_zkp_z)
-            == pi.schnorr_zkp_u * G::pow(h, pi.schnorr_zkp_c)
+        && G::g_pow(pi.schnorr_zkp_z) == pi.schnorr_zkp_u * G::pow(h, pi.schnorr_zkp_c)
 }
 
 #[derive(Serialize, SchemaType, Clone, Copy)]
@@ -160,13 +164,9 @@ pub fn zkp_one_out_of_two_validate<G: Group>(h: G, zkp: OrZKPCommit<G>) -> bool 
     ]); // TODO: add i
 
     (c == zkp.or_zkp_d1 + zkp.or_zkp_d2
-        && zkp.or_zkp_a1
-            == G::g_pow(zkp.or_zkp_r1) * G::pow(zkp.or_zkp_x, zkp.or_zkp_d1)
-        && zkp.or_zkp_b1
-            == G::pow(h, zkp.or_zkp_r1) *
-                G::pow(zkp.or_zkp_y, zkp.or_zkp_d1)
-        && zkp.or_zkp_a2
-            == G::g_pow(zkp.or_zkp_r2) * G::pow(zkp.or_zkp_x, zkp.or_zkp_d2)
+        && zkp.or_zkp_a1 == G::g_pow(zkp.or_zkp_r1) * G::pow(zkp.or_zkp_x, zkp.or_zkp_d1)
+        && zkp.or_zkp_b1 == G::pow(h, zkp.or_zkp_r1) * G::pow(zkp.or_zkp_y, zkp.or_zkp_d1)
+        && zkp.or_zkp_a2 == G::g_pow(zkp.or_zkp_r2) * G::pow(zkp.or_zkp_x, zkp.or_zkp_d2)
         && zkp.or_zkp_b2
             == G::pow(h, zkp.or_zkp_r2) * G::pow(div::<G>(zkp.or_zkp_y, G::g()), zkp.or_zkp_d2))
 }
@@ -288,8 +288,8 @@ pub fn compute_g_pow_yi<G: Group, const n: usize>(i: usize, xis: [G; n]) -> G {
 }
 
 pub fn compute_group_element_for_vote<G: Group>(xi: G::Z, vote: bool, g_pow_yi: G) -> G {
-    G::pow(g_pow_yi, xi) *
-        G::g_pow(if vote {
+    G::pow(g_pow_yi, xi)
+        * G::g_pow(if vote {
             G::Z::field_one()
         } else {
             G::Z::field_zero()
